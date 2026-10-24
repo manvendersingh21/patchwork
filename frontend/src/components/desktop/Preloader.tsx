@@ -40,17 +40,17 @@ export default function Preloader({ onDone }: { onDone: () => void }) {
       ref={rootRef}
       className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-desktop"
     >
-      <div className="font-mono text-4xl font-bold tracking-[0.35em] text-slate-100">
+      <div className="font-mono text-4xl font-bold tracking-[0.35em] text-slate-900">
         PATCH<span className="text-accent">WORK</span>
       </div>
       <p className="mt-2 font-mono text-base tracking-[0.2em] text-slate-500">
         CONFERENCE MEMORY · FALKORDB
       </p>
-      <div className="mt-6 h-px w-64 overflow-hidden bg-slate-800">
+      <div className="mt-6 h-px w-64 overflow-hidden bg-slate-200">
         <div className="load-bar-fill h-full bg-accent" />
       </div>
-      <div className="absolute bottom-6 left-0 right-0 overflow-hidden border-y border-slate-800/80 py-1">
-        <div className="marquee-track font-mono text-base text-slate-600">
+      <div className="absolute bottom-6 left-0 right-0 overflow-hidden border-y border-slate-200 py-1">
+        <div className="marquee-track font-mono text-base text-slate-400">
           {[0, 1].map((k) => (
             <span key={k}>
               {Array.from({ length: 6 }).map((_, i) => (

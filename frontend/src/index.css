@@ -4,7 +4,7 @@
   --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-accent: #0a66ff;
-  --color-desktop: #05070d;
+  --color-desktop: #ffffff;
 }
 
 /* Fluid typography, like the reference site; clamped on small and huge screens. */
@@ -39,15 +39,15 @@ body,
 /* Desktop wallpaper: deep navy gradient + faint dot grid. */
 .desktop-wallpaper {
   background:
-    radial-gradient(1100px 700px at 78% 18%, rgba(10, 102, 255, 0.13), transparent 60%),
-    radial-gradient(900px 620px at 12% 88%, rgba(56, 189, 248, 0.07), transparent 55%),
-    linear-gradient(180deg, #05070d 0%, #070b16 55%, #05070d 100%);
+    radial-gradient(1100px 700px at 78% 18%, rgba(10, 102, 255, 0.08), transparent 60%),
+    radial-gradient(900px 620px at 12% 88%, rgba(56, 189, 248, 0.06), transparent 55%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #ffffff 100%);
 }
 .desktop-wallpaper::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(100, 116, 139, 0.16) 1px, transparent 1px);
   background-size: 26px 26px;
   pointer-events: none;
 }
@@ -88,8 +88,8 @@ body,
 }
 .dicon:hover .dicon-tile,
 .dicon.is-selected .dicon-tile {
-  border-color: rgba(255, 255, 255, 0.18);
-  background-color: rgba(0, 0, 0, 0.28);
+  border-color: rgba(15, 23, 42, 0.14);
+  background-color: rgba(15, 23, 42, 0.06);
   backdrop-filter: blur(4px);
 }
 .dicon-label {
@@ -162,4 +162,9 @@ body,
 }
 .alert-in {
   animation: alert-in 0.35s ease-out;
+}
+
+/* Graph pane: keep only the canvas-drawn node label, hide the built-in tooltip. */
+.graph-pane .graph-tooltip {
+  display: none;
 }

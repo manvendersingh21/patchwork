@@ -30,10 +30,10 @@ export default function DesktopIcon({
       className="dicon group flex w-[7.5rem] flex-col items-center gap-1 p-1 outline-none"
       aria-label={`Open ${label}`}
     >
-      <span className="dicon-tile flex h-16 w-16 items-center justify-center text-slate-200 group-hover:text-white">
+      <span className="dicon-tile flex h-16 w-16 items-center justify-center text-slate-600 group-hover:text-slate-900">
         {children}
       </span>
-      <span className="dicon-label max-w-full truncate text-center font-mono text-base text-slate-300 group-hover:text-white">
+      <span className="dicon-label max-w-full truncate text-center font-mono text-base text-slate-600 group-hover:text-white">
         {label}
       </span>
     </button>

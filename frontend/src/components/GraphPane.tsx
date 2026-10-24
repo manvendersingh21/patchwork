@@ -180,7 +180,7 @@ export default function GraphPane({ graphData, highlight }: { graphData: GraphDa
   }, [])
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-slate-950">
+    <div className="graph-pane relative h-full w-full overflow-hidden bg-slate-950">
       <div ref={wrapRef} className="absolute inset-0">
         {size.w > 0 && size.h > 0 && (
           <ForceGraph2D<FGN, FGL>
@@ -192,6 +192,7 @@ export default function GraphPane({ graphData, highlight }: { graphData: GraphDa
             nodeId="uid"
             autoPauseRedraw={false}
             nodeRelSize={6}
+            nodeLabel={() => ''}
             nodeCanvasObject={paintNode}
             nodePointerAreaPaint={paintArea}
             linkColor={linkColor}

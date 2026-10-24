@@ -344,7 +344,7 @@ export default function App() {
   const topZ = Math.max(...Object.values(wins).map((w) => w.z))
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-desktop font-sans text-slate-100">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-desktop font-sans text-slate-900">
       {!booted && <Preloader onDone={onBooted} />}
       <TopBar health={health} mock={IS_MOCK} />
 

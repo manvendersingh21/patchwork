@@ -20,7 +20,7 @@ export default function Marquee({ events }: { events: AgentEvent[] }) {
         ]
 
   return (
-    <footer className="relative z-[500] shrink-0 overflow-hidden border-t border-slate-800/80 bg-slate-950/70 py-1 backdrop-blur">
+    <footer className="relative z-[500] shrink-0 overflow-hidden border-t border-slate-200 bg-white/80 py-1 backdrop-blur">
       <div className="marquee-track font-mono text-base">
         {[0, 1].map((copy) => (
           <span key={copy} className="flex">

@@ -6,7 +6,7 @@ function HealthDot({ name, ok }: { name: string; ok: boolean }) {
   return (
     <span className="flex items-center gap-1">
       <span className={`h-1.5 w-1.5 rounded-full ${ok ? 'bg-emerald-400' : 'bg-rose-500'}`} />
-      <span className="font-mono text-base text-slate-400">{name}</span>
+      <span className="font-mono text-base text-slate-500">{name}</span>
     </span>
   )
 }
@@ -28,8 +28,8 @@ export default function TopBar({ health, mock }: { health: HealthStatus | null; 
     : 0
 
   return (
-    <header className="relative z-[500] flex h-8 shrink-0 items-center gap-3 border-b border-slate-800/80 bg-slate-950/70 px-3 backdrop-blur">
-      <span className="font-mono text-lg font-bold tracking-tight text-slate-100">
+    <header className="relative z-[500] flex h-8 shrink-0 items-center gap-3 border-b border-slate-200 bg-white/80 px-3 backdrop-blur">
+      <span className="font-mono text-lg font-bold tracking-tight text-slate-900">
         Patch<span className="text-accent">Work</span>
       </span>
       {mock && (
@@ -47,7 +47,7 @@ export default function TopBar({ health, mock }: { health: HealthStatus | null; 
         ) : (
           <span className="font-mono text-base text-slate-500">checking health…</span>
         )}
-        <span className="font-mono text-base tabular-nums text-slate-400">
+        <span className="font-mono text-base tabular-nums text-slate-500">
           {clock.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </span>
       </div>
