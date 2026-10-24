@@ -15,15 +15,15 @@ Write these once, pre-classify them so the LLM cache is warm, and never retype t
 
 <https://github.com/manvendersingh21/deepcore-n1/issues/1> · must land on `mcp-auth` (also `agentic-security`, `oauth`).
 
-**Act 2 hallway note** — PLACEHOLDER, fill in before the run:
+**Act 2 hallway note** (teammate: Vasisht):
 
-> Met `<TEAMMATE NAME — PLACEHOLDER>` at the snack table. They scope agent tokens so agents can open PRs but never merge them.
+> Met Vasisht at the snack table. They scope agent tokens so agents can open PRs but never merge them.
 
 Place: `Snack table`. Must land on `mcp-auth`.
 The repo has no `data/people.json`, so there is no real teammate on file yet. Before Act 2: pick a real person
 who actually discussed MCP authorization with you that day, get their consent, sync them as a guest, and replace
 the placeholder. Do not run with the angle brackets still in the note — the parser would create a Person named
-`<TEAMMATE NAME — PLACEHOLDER>`.
+Vasisht.
 
 **Act 3 issue** — opened live from the phone during the demo:
 
