@@ -1,5 +1,155 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-accent: #0a66ff;
+  --color-desktop: #05070d;
+}
+
+/* Fluid typography, like the reference site; clamped on small and huge screens. */
+html {
+  font-size: calc(0.625rem + 0.42vw);
+}
+@media screen and (max-width: 767px) {
+  html {
+    font-size: 1rem;
+  }
+}
+@media screen and (min-width: 1440px) {
+  html {
+    font-size: 1rem;
+  }
+}
+
+/* Reference hides scrollbars everywhere; panes still scroll. */
+html {
+  scrollbar-width: none;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Desktop wallpaper: deep navy gradient + faint dot grid. */
+.desktop-wallpaper {
+  background:
+    radial-gradient(1100px 700px at 78% 18%, rgba(10, 102, 255, 0.13), transparent 60%),
+    radial-gradient(900px 620px at 12% 88%, rgba(56, 189, 248, 0.07), transparent 55%),
+    linear-gradient(180deg, #05070d 0%, #070b16 55%, #05070d 100%);
+}
+.desktop-wallpaper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-size: 26px 26px;
+  pointer-events: none;
+}
+
+/* Window chrome: translucent like the reference windows. */
+.win-shell {
+  background: rgba(10, 14, 24, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 2px 10px rgba(0, 0, 0, 0.35);
+}
+.win-titlebar {
+  background: rgba(148, 163, 184, 0.05);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.win-focused {
+  border-color: rgba(10, 102, 255, 0.45);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(10, 102, 255, 0.25),
+    0 2px 26px rgba(10, 102, 255, 0.12);
+}
+
+/* Desktop icon tiles, reference-style selection/hover. */
+.dicon-tile {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    border-radius 0.12s ease,
+    backdrop-filter 0.12s ease;
+}
+.dicon:hover .dicon-tile,
+.dicon.is-selected .dicon-tile {
+  border-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(4px);
+}
+.dicon-label {
+  padding: 0.125rem 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.dicon:hover .dicon-label,
+.dicon.is-selected .dicon-label {
+  background: #0a66ff;
+  color: #fff;
+}
+
+/* Bottom marquee strip. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee-scroll 36s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* Alert toast entry. */
+@keyframes toast-in {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.toast-in {
+  animation: toast-in 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Preloader. */
+@keyframes load-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.load-bar-fill {
+  animation: load-bar 1.15s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* Answer cards keep the old alert slide-in. */
 @keyframes alert-in {
   from {
     transform: translateX(-24px);
@@ -12,10 +162,4 @@
 }
 .alert-in {
   animation: alert-in 0.35s ease-out;
-}
-
-html,
-body,
-#root {
-  height: 100%;
 }

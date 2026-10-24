@@ -85,9 +85,9 @@ export interface AskEnvelope {
 }
 
 export interface HealthStatus {
-  falkordb: string
-  openai: string
-  github: string
+  falkordb: boolean
+  openai: boolean
+  github: boolean
   counts: Record<string, number>
 }
 

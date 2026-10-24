@@ -7,6 +7,11 @@ import AlertCard from './components/AlertCard'
 import EncounterBox from './components/EncounterBox'
 import GraphPane from './components/GraphPane'
 import { AnswerCard, default as AskPane } from './components/AskPane'
+import DesktopIcon from './components/desktop/DesktopIcon'
+import Marquee from './components/desktop/Marquee'
+import Preloader from './components/desktop/Preloader'
+import TopBar from './components/desktop/TopBar'
+import Win, { type WinRect } from './components/desktop/Win'
 
 const POLL_GRAPH_MS = 2000
 const POLL_EVENTS_MS = 1000
@@ -14,14 +19,75 @@ const POLL_HEALTH_MS = 5000
 const POLL_ALERTS_MS = 2000
 const INJECT_MSG_MS = 5000
 
-function HealthDot({ name, ok }: { name: string; ok: boolean }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`h-2.5 w-2.5 rounded-full ${ok ? 'bg-emerald-400' : 'bg-rose-500'}`} />
-      <span className="text-slate-400">{name}</span>
-    </span>
-  )
+type WinId = 'graph' | 'ask' | 'notes' | 'sync' | 'agents'
+type WinState = { open: boolean; minimized: boolean; z: number }
+
+const WIN_TITLES: Record<WinId, string> = {
+  graph: 'patchwork://graph',
+  ask: 'patchwork://ask',
+  notes: 'patchwork://notes',
+  sync: 'patchwork://sync',
+  agents: 'patchwork://agents',
 }
+
+/** Initial window geometry, responsive to the viewport at first paint. */
+function initialRects(): Record<WinId, WinRect> {
+  const vw = typeof window === 'undefined' ? 1440 : window.innerWidth
+  const vh = typeof window === 'undefined' ? 900 : window.innerHeight
+  if (vw < 900) {
+    const full = { x: 8, y: 44, w: vw - 16, h: vh - 130 }
+    return { graph: full, ask: full, notes: full, sync: full, agents: full }
+  }
+  return {
+    graph: { x: Math.round(vw * 0.24), y: Math.round(vh * 0.08), w: Math.round(vw * 0.62), h: Math.round(vh * 0.7) },
+    ask: { x: Math.round(vw * 0.05), y: Math.round(vh * 0.1), w: 480, h: Math.round(vh * 0.52) },
+    notes: { x: Math.round(vw * 0.05), y: Math.round(vh * 0.5), w: 460, h: Math.round(vh * 0.3) },
+    sync: { x: Math.round(vw * 0.07), y: Math.round(vh * 0.34), w: 440, h: 190 },
+    agents: { x: Math.round(vw * 0.12), y: Math.round(vh * 0.6), w: 500, h: Math.round(vh * 0.28) },
+  }
+}
+
+// -- tiny inline glyphs for the desktop icons --------------------------------
+
+const GlyphGraph = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <circle cx="5" cy="18" r="2" />
+    <circle cx="12" cy="5" r="2" />
+    <circle cx="19" cy="15" r="2" />
+    <circle cx="7" cy="9" r="1.4" />
+    <path d="M6.2 10.1 11 6.7M13.8 6.3 17.6 13.4M7 16.2 5.8 16.8M8.6 8.2l8.4 6.2" />
+  </svg>
+)
+const GlyphAsk = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <path d="M4 5h16v11H9l-5 4V5Z" />
+    <path d="M8 9h8M8 12h5" />
+  </svg>
+)
+const GlyphNotes = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <path d="M5 4h14v16H5z" />
+    <path d="M8 8h8M8 12h8M8 16h4" />
+  </svg>
+)
+const GlyphSync = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <path d="M20 12a8 8 0 1 1-2.3-5.6" />
+    <path d="M20 3v4h-4" />
+  </svg>
+)
+const GlyphAgents = () => (
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <circle cx="12" cy="12" r="2.4" />
+    <circle cx="5" cy="5" r="1.6" />
+    <circle cx="19" cy="5" r="1.6" />
+    <circle cx="5" cy="19" r="1.6" />
+    <circle cx="19" cy="19" r="1.6" />
+    <path d="M6.3 6.3 10.2 10.2M17.7 6.3 13.8 10.2M6.3 17.7 10.2 13.8M17.7 17.7 13.8 13.8" />
+  </svg>
+)
+
+// -- sync window body ---------------------------------------------------------
 
 function SyncBox() {
   const [handle, setHandle] = useState(PRESENTER_HANDLE)
@@ -42,7 +108,7 @@ function SyncBox() {
   }
 
   return (
-    <section className="space-y-1">
+    <section className="space-y-2 p-3">
       <form
         onSubmit={(e) => {
           e.preventDefault()
@@ -54,20 +120,22 @@ function SyncBox() {
         <input
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
-          className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900/70 px-2 py-1 text-base text-slate-100 focus:border-sky-500 focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900/70 px-2 py-1 text-base text-slate-100 focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
           disabled={busy || !handle.trim()}
-          className="shrink-0 rounded border border-violet-400/50 px-2.5 py-1 text-base text-violet-300 hover:bg-violet-400/10 disabled:opacity-40"
+          className="shrink-0 rounded border border-accent/60 px-2.5 py-1 font-mono text-base text-accent hover:bg-accent/10 disabled:opacity-40"
         >
           {busy ? 'Syncing…' : 'Sync my codebase'}
         </button>
       </form>
-      {status && <p className="truncate text-base text-slate-400">{status}</p>}
+      {status && <p className="truncate font-mono text-base text-slate-400">{status}</p>}
     </section>
   )
 }
+
+// -- app ----------------------------------------------------------------------
 
 export default function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null)
@@ -78,6 +146,17 @@ export default function App() {
   const [highlight, setHighlight] = useState<Highlight | null>(null)
   const [busyAsk, setBusyAsk] = useState(false)
   const [injectMsg, setInjectMsg] = useState<string | null>(null)
+  const [booted, setBooted] = useState(false)
+
+  const [wins, setWins] = useState<Record<WinId, WinState>>({
+    graph: { open: false, minimized: false, z: 0 },
+    ask: { open: false, minimized: false, z: 0 },
+    notes: { open: false, minimized: false, z: 0 },
+    sync: { open: false, minimized: false, z: 0 },
+    agents: { open: false, minimized: false, z: 0 },
+  })
+  const [rects] = useState(initialRects)
+  const zRef = useRef(10)
 
   const nonceRef = useRef(0)
   const sinceRef = useRef(0)
@@ -89,6 +168,31 @@ export default function App() {
     nonceRef.current += 1
     return nonceRef.current
   }
+
+  const focusWin = useCallback((id: WinId) => {
+    zRef.current += 1
+    const z = zRef.current
+    setWins((w) => ({ ...w, [id]: { ...w[id], z } }))
+  }, [])
+
+  const openWin = useCallback(
+    (id: WinId) => {
+      setWins((w) => (w[id].open && !w[id].minimized ? w : { ...w, [id]: { open: true, minimized: false, z: ++zRef.current } }))
+    },
+    [],
+  )
+  const closeWin = useCallback((id: WinId) => setWins((w) => ({ ...w, [id]: { ...w[id], open: false } })), [])
+  const minimizeWin = useCallback(
+    (id: WinId) => setWins((w) => ({ ...w, [id]: { ...w[id], minimized: true } })),
+    [],
+  )
+
+  // After the preloader: open the hero windows with a slight cascade.
+  const onBooted = useCallback(() => {
+    setBooted(true)
+    openWin('graph')
+    setTimeout(() => openWin('ask'), 260)
+  }, [openWin])
 
   // /api/graph every 2 s — GraphPane merges nodes in place by uid.
   useEffect(() => {
@@ -109,7 +213,7 @@ export default function App() {
     }
   }, [])
 
-  // /api/events every 1 s — oldest first, ticker keeps the last 8.
+  // /api/events every 1 s.
   useEffect(() => {
     let alive = true
     const load = async () => {
@@ -117,7 +221,7 @@ export default function App() {
         const fresh = await api.events(sinceRef.current)
         if (!alive || fresh.length === 0) return
         sinceRef.current = fresh[fresh.length - 1].ts
-        setEvents((prev) => [...prev, ...fresh].slice(-8))
+        setEvents((prev) => [...prev, ...fresh].slice(-40))
       } catch {
         /* ignore */
       }
@@ -148,7 +252,7 @@ export default function App() {
     }
   }, [])
 
-  // /api/alerts — a new ACTION_READY bridge slides in and takes the highlight.
+  // /api/alerts — a new ACTION_READY bridge pops a toast and raises the graph.
   useEffect(() => {
     let alive = true
     const load = async () => {
@@ -159,6 +263,7 @@ export default function App() {
         alertRef.current = a
         setAlert(a)
         setHighlight(highlightFromPath(a.path, nextNonce()))
+        openWin('graph')
       } catch {
         /* ignore */
       }
@@ -169,24 +274,28 @@ export default function App() {
       alive = false
       clearInterval(id)
     }
-  }, [])
+  }, [openWin])
 
-  const ask = useCallback(async (question: string) => {
-    if (askingRef.current) return
-    askingRef.current = true
-    setBusyAsk(true)
-    try {
-      const env = await api.ask(question)
-      lastAnswerRef.current = env
-      setAnswers((prev) => [env, ...prev])
-      setHighlight(highlightFromPath(env.path, nextNonce()))
-    } catch (err) {
-      console.error('ask failed', err)
-    } finally {
-      askingRef.current = false
-      setBusyAsk(false)
-    }
-  }, [])
+  const ask = useCallback(
+    async (question: string) => {
+      if (askingRef.current) return
+      askingRef.current = true
+      setBusyAsk(true)
+      try {
+        const env = await api.ask(question)
+        lastAnswerRef.current = env
+        setAnswers((prev) => [env, ...prev])
+        setHighlight(highlightFromPath(env.path, nextNonce()))
+        openWin('graph')
+      } catch (err) {
+        console.error('ask failed', err)
+      } finally {
+        askingRef.current = false
+        setBusyAsk(false)
+      }
+    },
+    [openWin],
+  )
 
   const dismissAlert = useCallback(() => {
     const a = alertRef.current
@@ -232,65 +341,95 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [injectIssue, replayHighlight])
 
-  const nodeCount = health
-    ? Object.entries(health.counts)
-        .filter(([label]) => label !== 'AgentEvent' && label !== 'BRIDGE')
-        .reduce((sum, [, count]) => sum + count, 0)
-    : 0
+  const topZ = Math.max(...Object.values(wins).map((w) => w.z))
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100">
-      <aside className="flex h-full w-2/5 min-w-0 flex-col border-r border-slate-800">
-        <header className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-4 py-2">
-          <h1 className="text-xl font-bold tracking-tight">PatchWork</h1>
-          {IS_MOCK && (
-            <span className="rounded bg-amber-400/15 px-1.5 py-0.5 text-base text-amber-300">mock</span>
-          )}
-          <span className="truncate font-mono text-base text-slate-400">@{PRESENTER_HANDLE}</span>
-          <div className="ml-auto flex shrink-0 items-center gap-3 text-base">
-            {health ? (
-              <>
-                <HealthDot name="FalkorDB" ok={health.falkordb === 'ok'} />
-                <HealthDot name="OpenAI" ok={health.openai === 'ok'} />
-                <HealthDot name="GitHub" ok={health.github === 'ok'} />
-                <span className="text-slate-500">{nodeCount} nodes</span>
-              </>
-            ) : (
-              <span className="text-slate-500">checking health…</span>
-            )}
-          </div>
-        </header>
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-desktop font-sans text-slate-100">
+      {!booted && <Preloader onDone={onBooted} />}
+      <TopBar health={health} mock={IS_MOCK} />
 
-        <div className="flex shrink-0 flex-col gap-3 px-4 pt-3 pb-2">
-          <SyncBox />
-          <AskPane onAsk={(q) => void ask(q)} busy={busyAsk} />
-          <EncounterBox />
+      <div className="desktop-wallpaper relative flex min-h-0 flex-1">
+        {/* desktop icons */}
+        <div className="absolute left-2 top-3 z-[2] flex flex-col gap-2">
+          <DesktopIcon label="Graph" onOpen={() => openWin('graph')}>
+            <GlyphGraph />
+          </DesktopIcon>
+          <DesktopIcon label="Ask" onOpen={() => openWin('ask')}>
+            <GlyphAsk />
+          </DesktopIcon>
+          <DesktopIcon label="Notes" onOpen={() => openWin('notes')}>
+            <GlyphNotes />
+          </DesktopIcon>
+          <DesktopIcon label="Sync" onOpen={() => openWin('sync')}>
+            <GlyphSync />
+          </DesktopIcon>
+          <DesktopIcon label="Agents" onOpen={() => openWin('agents')}>
+            <GlyphAgents />
+          </DesktopIcon>
         </div>
 
-        <section className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-3" aria-label="answers">
-          {answers.length === 0 && (
-            <p className="text-base text-slate-500">
-              Ask a question — every answer comes back with its path, the Cypher and FalkorDB&rsquo;s own
-              execution time.
-            </p>
+        {/* windows */}
+        {(Object.keys(WIN_TITLES) as WinId[]).map((id) => (
+          <Win
+            key={id}
+            title={WIN_TITLES[id]}
+            open={wins[id].open}
+            minimized={wins[id].minimized}
+            focused={wins[id].z === topZ}
+            rect={rects[id]}
+            onPointerDown={() => focusWin(id)}
+            onClose={() => closeWin(id)}
+            onMinimize={() => minimizeWin(id)}
+          >
+            {id === 'graph' && <GraphPane graphData={graph} highlight={highlight} />}
+            {id === 'ask' && (
+              <div className="flex h-full flex-col">
+                <div className="shrink-0 border-b border-slate-800/70 p-3">
+                  <AskPane onAsk={(q) => void ask(q)} busy={busyAsk} />
+                </div>
+                <section className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3" aria-label="answers">
+                  {answers.length === 0 && (
+                    <p className="text-base text-slate-500">
+                      Ask a question — every answer comes back with its path, the Cypher and FalkorDB&rsquo;s
+                      own execution time.
+                    </p>
+                  )}
+                  {answers.map((env, i) => (
+                    <AnswerCard key={`${nonceRef.current}-${i}-${env.template}`} env={env} />
+                  ))}
+                </section>
+              </div>
+            )}
+            {id === 'notes' && (
+              <div className="h-full overflow-y-auto">
+                <EncounterBox />
+              </div>
+            )}
+            {id === 'sync' && <SyncBox />}
+            {id === 'agents' && (
+              <div className="h-full overflow-y-auto">
+                <AgentTicker events={events} />
+              </div>
+            )}
+          </Win>
+        ))}
+
+        {/* toasts */}
+        <div className="pointer-events-none absolute right-3 top-3 z-[600] flex w-[26rem] max-w-[calc(100vw-1.5rem)] flex-col items-end gap-2">
+          {injectMsg && (
+            <div className="toast-in pointer-events-auto rounded-md border border-amber-400/40 bg-slate-900/95 px-3 py-1.5 font-mono text-base text-amber-300 shadow-lg">
+              {injectMsg}
+            </div>
           )}
-          {answers.map((env, i) => (
-            <AnswerCard key={`${nonceRef.current}-${i}-${env.template}`} env={env} />
-          ))}
-        </section>
+          {alert && (
+            <div className="pointer-events-auto">
+              <AlertCard alert={alert} onDismiss={dismissAlert} />
+            </div>
+          )}
+        </div>
+      </div>
 
-        {injectMsg && (
-          <p className="shrink-0 border-t border-slate-800 bg-amber-400/10 px-4 py-1 text-base text-amber-300">
-            {injectMsg}
-          </p>
-        )}
-        <AgentTicker events={events} />
-      </aside>
-
-      <main className="relative h-full w-3/5 min-w-0">
-        <GraphPane graphData={graph} highlight={highlight} />
-        {alert && <AlertCard alert={alert} onDismiss={dismissAlert} />}
-      </main>
+      <Marquee events={events} />
     </div>
   )
 }

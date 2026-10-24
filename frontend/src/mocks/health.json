@@ -1,7 +1,7 @@
 {
-  "falkordb": "ok",
-  "openai": "ok",
-  "github": "ok",
+  "falkordb": true,
+  "openai": true,
+  "github": true,
   "counts": {
     "Person": 5,
     "Repo": 1,

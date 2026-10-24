@@ -15,7 +15,7 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
   }
 
   return (
-    <div className="alert-in absolute bottom-4 left-4 z-20 w-[26rem] max-w-[calc(100%-2rem)] rounded-lg border border-emerald-400/40 bg-slate-900/95 p-3 shadow-xl shadow-emerald-500/10">
+    <div className="toast-in w-[26rem] max-w-[calc(100vw-2rem)] rounded-lg border border-emerald-400/40 bg-slate-900/95 p-3 shadow-xl shadow-emerald-500/10">
       <h3 className="text-lg font-semibold text-emerald-300">Someone you met can help with this</h3>
       <p className="mt-1 text-base text-slate-100">
         <span className="font-medium">{alert.contact}</span> · {alert.place} ·{' '}
