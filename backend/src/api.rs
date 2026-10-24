@@ -10,7 +10,7 @@ use uuid::Uuid;
 pub fn router(state:AppState)->Router { Router::new()
     .route("/api/health",get(health)).route("/api/sync",post(sync)).route("/api/encounters",post(encounter))
     .route("/api/ask",post(ask)).route("/api/graph",get(graph_view)).route("/api/events",get(events))
-    .route("/api/alerts",get(alerts)).route("/api/alerts/{bridge_uid}/seen",post(seen))
+    .route("/api/alerts",get(alerts)).route("/api/alerts/{bridge_uid}/seen",post(seen)).route("/api/alerts/{bridge_uid}/send",post(send_followup))
     .route("/api/topics",get(topics)).route("/api/demo/inject-issue",post(inject_issue)).with_state(Arc::new(state)) }
 
 async fn health(State(s):State<Arc<AppState>>)->Json<Value>{
@@ -105,6 +105,36 @@ async fn graph_view(State(s):State<Arc<AppState>>,Query(q):Query<HashMap<String,
 
 async fn events(State(s):State<Arc<AppState>>,Query(q):Query<HashMap<String,String>>)->Json<Value>{let since=q.get("since").and_then(|v|v.parse::<i64>().ok()).unwrap_or(0).to_string();let Ok(mut g)=connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await else{return Json(json!([]))};let rows=query_rows(&mut g,"MATCH (e:AgentEvent) WHERE e.ts >= toInteger($since) RETURN e.uid AS uid,e.ts AS ts,e.agent AS agent,e.action AS action,e.target AS target,e.detail AS detail ORDER BY ts LIMIT 100",json!({"since":since})).await.unwrap_or_default();Json(json!(rows))}
 async fn alerts(State(s):State<Arc<AppState>>)->Json<Value>{let Ok(mut g)=connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await else{return Json(json!([]))};let rows=query_rows(&mut g,"MATCH (i:Issue)-[b:BRIDGE {kind:'contact',state:'ACTION_READY',seen:'false'}]->(c:Person) RETURN b.uid AS bridge_uid,i.title AS issue,c.name AS contact,b.note AS note,b.place AS place,b.met_at AS met_at,b.draft AS draft,b.path_uids AS path,b.hops AS hops ORDER BY b.created_at DESC LIMIT 20",json!({})).await.unwrap_or_default();Json(json!(rows))}
+#[derive(Deserialize)] struct SendBody { message:String, #[serde(default)] confirm:bool }
+
+/// Send a bridge's follow-up as a LinkedIn DM. The recipient is the contact stored on the bridge,
+/// never caller-supplied; `confirm` must be true; a bridge is sent at most once.
+async fn send_followup(State(s):State<Arc<AppState>>,Path(uid):Path<String>,Json(body):Json<SendBody>)->(StatusCode,Json<Value>){
+    let fail=|code:StatusCode,msg:&str|(code,Json(json!({"ok":false,"error":msg})));
+    if !body.confirm{return fail(StatusCode::BAD_REQUEST,"confirm must be true");}
+    let message=body.message.trim().to_string();
+    if message.is_empty()||message.chars().count()>2000{return fail(StatusCode::BAD_REQUEST,"message must be 1-2000 characters");}
+    let Some(li)=crate::linkedin::LinkedIn::from_env() else{return fail(StatusCode::SERVICE_UNAVAILABLE,"LINKEDIN_MCP_URL is not set");};
+    let Ok(mut g)=connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await else{return fail(StatusCode::SERVICE_UNAVAILABLE,"graph unavailable");};
+    let rows=query_rows(&mut g,"MATCH (:Issue)-[b:BRIDGE {uid:$uid, kind:'contact'}]->(c:Person) RETURN c.linkedin AS linkedin, c.name AS name, coalesce(b.sent,'false') AS sent",json!({"uid":uid})).await.unwrap_or_default();
+    let Some(row)=rows.first() else{return fail(StatusCode::NOT_FOUND,"no contact bridge with that uid");};
+    if row["sent"].as_str()==Some("true"){return fail(StatusCode::CONFLICT,"this follow-up was already sent");}
+    let target=row["linkedin"].as_str().unwrap_or("").to_string();
+    if target.is_empty(){return fail(StatusCode::UNPROCESSABLE_ENTITY,"this contact has no LinkedIn profile on file");}
+    // Claim before sending so a double click cannot send twice.
+    if write_query(&mut g,"MATCH ()-[b:BRIDGE {uid:$uid}]->() SET b.sent='true'",json!({"uid":uid})).await.is_err(){return fail(StatusCode::SERVICE_UNAVAILABLE,"graph unavailable");}
+    match li.call("send_message",json!({"linkedin_username":target,"message":message,"confirm_send":true})).await{
+        Ok(result)=>{
+            let _=write_query(&mut g,"MATCH ()-[b:BRIDGE {uid:$uid}]->() SET b.seen='true', b.state='SENT', b.sent_at=$at, b.sent_text=$text",json!({"uid":uid,"at":Utc::now().to_rfc3339(),"text":message})).await;
+            (StatusCode::OK,Json(json!({"ok":true,"to":row["name"],"result":result})))
+        }
+        Err(e)=>{
+            let _=write_query(&mut g,"MATCH ()-[b:BRIDGE {uid:$uid}]->() SET b.sent='false'",json!({"uid":uid})).await;
+            fail(StatusCode::BAD_GATEWAY,&e.to_string())
+        }
+    }
+}
+
 async fn seen(State(s):State<Arc<AppState>>,Path(uid):Path<String>)->Json<Value>{if let Ok(mut g)=connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await{let _=write_query(&mut g,"MATCH ()-[b:BRIDGE {uid:$uid}]->() SET b.seen='true'",json!({"uid":uid})).await;}Json(json!({"ok":true}))}
 async fn topics()->Json<Value>{let v:Value=serde_json::from_str(include_str!("../../data/topics.json")).unwrap_or(json!({"topics":[]}));Json(Value::Array(v["topics"].as_array().into_iter().flatten().map(|t|json!({"slug":t["slug"],"name":t["name"]})).collect()))}
 #[derive(Deserialize)]struct InjectBody{title:String,body:String}

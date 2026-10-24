@@ -192,6 +192,16 @@ export const api = {
       : postJson(`/api/alerts/${bridgeUid}/seen`, {})
   },
 
+  sendFollowup: async (bridgeUid: string, message: string): Promise<{ ok: boolean; error?: string }> => {
+    if (IS_MOCK) return { ok: false, error: 'sending is disabled in mock mode' }
+    const res = await fetch(`/api/alerts/${bridgeUid}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, confirm: true }),
+    })
+    return (await res.json()) as { ok: boolean; error?: string }
+  },
+
   topics: (): Promise<TopicItem[]> =>
     IS_MOCK ? Promise.resolve(topicsJson as unknown as TopicItem[]) : getJson<TopicItem[]>('/api/topics'),
 

@@ -70,7 +70,7 @@ pub struct LogEncounterArgs {
     /// Where the conversation lives, e.g. a LinkedIn messaging thread URL. Empty for in-person chats.
     #[serde(default)]
     pub source_url: String,
-    /// Their LinkedIn profile slug (linkedin.com/in/<slug>), if known from the thread. Leave empty otherwise; never guess.
+    /// Their LinkedIn profile (linkedin.com/in/<id>), taken from the person reference get_conversation returns. Leave empty otherwise; never guess. Needed to send follow-ups from the UI.
     #[serde(default)]
     pub met_linkedin: String,
 }
@@ -250,7 +250,8 @@ fn strict_time(raw: &str) -> Result<String, String> {
 /// The strict_* helpers speak String errors; tools turn them into invalid_params.
 fn linkedin_slug(raw: &str) -> String {
     let r = raw.trim().split(['?', '#']).next().unwrap_or("").trim_end_matches('/');
-    r.rsplit("/in/").next().unwrap_or(r).trim_end_matches('/').to_lowercase()
+    // Keep case: profile ids such as ACoAA… are case-sensitive.
+    r.rsplit("/in/").next().unwrap_or(r).trim_end_matches('/').to_string()
 }
 
 /// Contact uid precedence: GitHub handle, then LinkedIn slug, then plain name.
@@ -542,7 +543,7 @@ mod tests {
     #[test]
     fn contact_uid_precedence() {
         assert_eq!(contact_uid("@octo", "ada", "Ada L"), "person:gh:octo");
-        assert_eq!(contact_uid("", "https://www.linkedin.com/in/Ada-L/", "Ada L"), "person:li:ada-l");
+        assert_eq!(contact_uid("", "https://www.linkedin.com/in/Ada-L/", "Ada L"), "person:li:Ada-L");
         assert_eq!(contact_uid("", "linkedin.com/in/ada-l?miniProfileUrn=x#y", "Ada L"), "person:li:ada-l");
         assert_eq!(contact_uid("", "", "Ada  L"), "person:name:ada-l");
     }

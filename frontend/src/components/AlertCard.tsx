@@ -1,12 +1,31 @@
 import { useState } from 'react'
+import { api } from '../api'
 import type { Alert } from '../types'
 
 export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => void }) {
   const [copied, setCopied] = useState(false)
+  const [draft, setDraft] = useState(alert.draft)
+  const [send, setSend] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'error'>('idle')
+  const [sendError, setSendError] = useState('')
+
+  const sendNow = async () => {
+    setSend('sending')
+    try {
+      const r = await api.sendFollowup(alert.bridge_uid, draft)
+      if (r.ok) setSend('sent')
+      else {
+        setSendError(r.error ?? 'send failed')
+        setSend('error')
+      }
+    } catch (e) {
+      setSendError(String(e))
+      setSend('error')
+    }
+  }
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(alert.draft)
+      await navigator.clipboard.writeText(draft)
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
@@ -23,9 +42,13 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
       </p>
       <p className="mt-1 text-base italic text-emerald-100/60">&ldquo;{alert.note}&rdquo;</p>
       <p className="mt-2 text-base text-emerald-100/60">{alert.issue}</p>
-      <div className="mt-2 rounded border border-emerald-900/60 bg-emerald-950/50 p-2 text-base text-slate-100">
-        {alert.draft}
-      </div>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        disabled={send === 'sending' || send === 'sent'}
+        rows={5}
+        className="mt-2 w-full resize-y rounded border border-emerald-900/60 bg-emerald-950/50 p-2 text-base text-slate-100"
+      />
       <div className="mt-2 flex items-center gap-2">
         <button
           onClick={() => void copy()}
@@ -33,6 +56,24 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
         >
           {copied ? 'Copied ✓' : 'Copy'}
         </button>
+        {send === 'idle' && (
+          <button
+            onClick={() => setSend('confirm')}
+            className="rounded border border-sky-400/50 px-2.5 py-1 text-base text-sky-300 hover:bg-sky-400/10"
+          >
+            Send on LinkedIn
+          </button>
+        )}
+        {send === 'confirm' && (
+          <button
+            onClick={() => void sendNow()}
+            className="rounded border border-amber-400/60 bg-amber-400/10 px-2.5 py-1 text-base text-amber-200"
+          >
+            Confirm send to {alert.contact}
+          </button>
+        )}
+        {send === 'sending' && <span className="text-base text-sky-300">Sending…</span>}
+        {send === 'sent' && <span className="text-base text-emerald-300">Sent on LinkedIn ✓</span>}
         <button
           onClick={onDismiss}
           className="rounded border border-emerald-900/60 px-2.5 py-1 text-base text-emerald-100/70 hover:bg-emerald-950/60"
@@ -43,6 +84,14 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
           {alert.hops} hops
         </span>
       </div>
+      {send === 'error' && (
+        <p className="mt-2 text-base text-rose-300">
+          Not sent: {sendError}{' '}
+          <button className="underline" onClick={() => setSend('idle')}>
+            Try again
+          </button>
+        </p>
+      )}
     </div>
   )
 }
