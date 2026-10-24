@@ -24,30 +24,30 @@ export default function EncounterBox() {
 
   return (
     <section className="space-y-1.5">
-      <h2 className="text-lg font-semibold text-slate-200">Log a hallway conversation</h2>
+      <h2 className="text-lg font-semibold text-slate-100">Log a hallway conversation</h2>
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
         placeholder="Met Jordan at the snack table. They scope agent tokens so agents can open PRs but never merge them."
-        className="w-full resize-none rounded border border-slate-700 bg-slate-900/70 px-2 py-1.5 text-base text-slate-100 placeholder:text-slate-600 focus:border-sky-500 focus:outline-none"
+        className="w-full resize-none rounded border border-emerald-900/70 bg-emerald-950/50 px-2 py-1.5 text-base text-slate-50 placeholder:text-emerald-200/60 focus:border-emerald-400 focus:outline-none"
       />
       <div className="flex gap-2">
         <input
           value={place}
           onChange={(e) => setPlace(e.target.value)}
           placeholder="Where (snack table, Expo Hall…)"
-          className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900/70 px-2 py-1.5 text-base text-slate-100 placeholder:text-slate-600 focus:border-sky-500 focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-emerald-950/50 px-2 py-1.5 text-base text-slate-50 placeholder:text-emerald-200/60 focus:border-emerald-400 focus:outline-none"
         />
         <button
           onClick={() => void submit()}
           disabled={busy || !note.trim()}
-          className="shrink-0 rounded border border-pink-400/50 px-2.5 py-1.5 text-base text-pink-300 hover:bg-pink-400/10 disabled:opacity-40"
+          className="shrink-0 rounded border border-emerald-400/60 px-2.5 py-1.5 text-base text-emerald-200 hover:bg-emerald-400/10 disabled:opacity-40"
         >
           {busy ? 'Logging…' : 'Log'}
         </button>
       </div>
-      {status && <p className="text-base text-slate-400">{status}</p>}
+      {status && <p className="text-base text-emerald-100/60">{status}</p>}
     </section>
   )
 }

@@ -3,7 +3,7 @@
 @theme {
   --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --color-accent: #0a66ff;
+  --color-accent: #10b981;
   --color-desktop: #ffffff;
 }
 
@@ -22,12 +22,24 @@ html {
   }
 }
 
-/* Reference hides scrollbars everywhere; panes still scroll. */
+/* Thin emerald scrollbars everywhere; panes still scroll. */
 html {
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
 }
 ::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
 }
 
 html,
@@ -36,11 +48,11 @@ body,
   height: 100%;
 }
 
-/* Desktop wallpaper: deep navy gradient + faint dot grid. */
+/* Desktop wallpaper: white with soft emerald glows + faint dot grid. */
 .desktop-wallpaper {
   background:
-    radial-gradient(1100px 700px at 78% 18%, rgba(10, 102, 255, 0.08), transparent 60%),
-    radial-gradient(900px 620px at 12% 88%, rgba(56, 189, 248, 0.06), transparent 55%),
+    radial-gradient(1100px 700px at 78% 18%, rgba(16, 185, 129, 0.08), transparent 60%),
+    radial-gradient(900px 620px at 12% 88%, rgba(52, 211, 153, 0.06), transparent 55%),
     linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #ffffff 100%);
 }
 .desktop-wallpaper::before {
@@ -52,27 +64,27 @@ body,
   pointer-events: none;
 }
 
-/* Window chrome: translucent like the reference windows. */
+/* Window chrome: translucent deep-green glass. */
 .win-shell {
-  background: rgba(10, 14, 24, 0.82);
+  background: rgba(4, 18, 12, 0.87);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.22);
   border-radius: 12px;
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.45),
     0 2px 10px rgba(0, 0, 0, 0.35);
 }
 .win-titlebar {
-  background: rgba(148, 163, 184, 0.05);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(16, 185, 129, 0.06);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.16);
 }
 .win-focused {
-  border-color: rgba(10, 102, 255, 0.45);
+  border-color: rgba(16, 185, 129, 0.55);
   box-shadow:
     0 24px 60px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(10, 102, 255, 0.25),
-    0 2px 26px rgba(10, 102, 255, 0.12);
+    0 0 0 1px rgba(16, 185, 129, 0.28),
+    0 2px 26px rgba(16, 185, 129, 0.15);
 }
 
 /* Desktop icon tiles, reference-style selection/hover. */
@@ -88,8 +100,8 @@ body,
 }
 .dicon:hover .dicon-tile,
 .dicon.is-selected .dicon-tile {
-  border-color: rgba(15, 23, 42, 0.14);
-  background-color: rgba(15, 23, 42, 0.06);
+  border-color: rgba(16, 185, 129, 0.35);
+  background-color: rgba(16, 185, 129, 0.1);
   backdrop-filter: blur(4px);
 }
 .dicon-label {
@@ -99,7 +111,7 @@ body,
 }
 .dicon:hover .dicon-label,
 .dicon.is-selected .dicon-label {
-  background: #0a66ff;
+  background: #10b981;
   color: #fff;
 }
 

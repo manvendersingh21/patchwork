@@ -46,7 +46,7 @@ export default function Preloader({ onDone }: { onDone: () => void }) {
       <p className="mt-2 font-mono text-base tracking-[0.2em] text-slate-500">
         CONFERENCE MEMORY · FALKORDB
       </p>
-      <div className="mt-6 h-px w-64 overflow-hidden bg-slate-200">
+      <div className="mt-6 h-px w-64 overflow-hidden bg-emerald-100">
         <div className="load-bar-fill h-full bg-accent" />
       </div>
       <div className="absolute bottom-6 left-0 right-0 overflow-hidden border-y border-slate-200 py-1">

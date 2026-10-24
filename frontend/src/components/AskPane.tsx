@@ -31,12 +31,12 @@ export default function AskPane({ onAsk, busy }: { onAsk: (question: string) => 
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask the graph…"
-          className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900/70 px-2 py-1.5 text-base text-slate-100 placeholder:text-slate-600 focus:border-sky-500 focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-emerald-950/50 px-2 py-1.5 text-base text-slate-50 placeholder:text-emerald-200/60 focus:border-emerald-400 focus:outline-none"
         />
         <button
           type="submit"
           disabled={busy || !question.trim()}
-          className="shrink-0 rounded border border-sky-400/50 px-2.5 py-1.5 text-base text-sky-300 hover:bg-sky-400/10 disabled:opacity-40"
+          className="shrink-0 rounded border border-emerald-400/60 px-2.5 py-1.5 text-base text-emerald-200 hover:bg-emerald-400/10 disabled:opacity-40"
         >
           {busy ? 'Asking…' : 'Ask'}
         </button>
@@ -47,7 +47,7 @@ export default function AskPane({ onAsk, busy }: { onAsk: (question: string) => 
             key={chip}
             onClick={() => onAsk(chip)}
             disabled={busy}
-            className="rounded-full border border-slate-700 bg-slate-900/60 px-2.5 py-1 text-base text-slate-300 hover:border-sky-400/60 hover:text-sky-200 disabled:opacity-40"
+            className="rounded-full border border-emerald-900/60 bg-emerald-950/40 px-2.5 py-1 text-base text-emerald-100/80 hover:border-emerald-400/60 hover:text-emerald-100 disabled:opacity-40"
           >
             {chip}
           </button>
@@ -59,16 +59,16 @@ export default function AskPane({ onAsk, busy }: { onAsk: (question: string) => 
 
 export function AnswerCard({ env }: { env: AskEnvelope }) {
   return (
-    <article className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
+    <article className="rounded-lg border border-emerald-900/50 bg-emerald-950/30 p-3">
       <p className="text-base text-slate-100">{env.answer}</p>
       <div className="mt-2">
         <PathBadges path={env.path} />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-base">
-        <span className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-slate-300">{env.template}</span>
-        <span className="text-slate-400">{env.hops} hops</span>
-        <span className="text-slate-500">·</span>
-        <span className="text-slate-400">
+        <span className="rounded bg-emerald-900/60 px-1.5 py-0.5 font-mono text-emerald-200">{env.template}</span>
+        <span className="text-emerald-100/60">{env.hops} hops</span>
+        <span className="text-emerald-200/40">·</span>
+        <span className="text-emerald-100/60">
           FalkorDB <span className="font-mono text-emerald-300">{env.run_time_ms} ms</span>
         </span>
         <span className="ml-auto">

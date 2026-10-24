@@ -122,19 +122,19 @@ export default function Win({
           <button
             onClick={onClose}
             aria-label={`Close ${title}`}
-            className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-slate-600/80 text-[0.55rem] font-bold leading-none text-slate-950 hover:bg-rose-400"
+            className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-900/70 text-[0.55rem] font-bold leading-none text-slate-950 hover:bg-rose-400"
           >
             ✕
           </button>
           <button
             onClick={onMinimize}
             aria-label={`Minimize ${title}`}
-            className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-slate-600/80 text-[0.55rem] font-bold leading-none text-slate-950 hover:bg-amber-300"
+            className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-900/70 text-[0.55rem] font-bold leading-none text-slate-950 hover:bg-amber-300"
           >
             –
           </button>
         </div>
-        <span className={`font-mono text-base tracking-wide ${focused ? 'text-accent' : 'text-slate-400'}`}>
+        <span className={`font-mono text-base tracking-wide ${focused ? 'text-accent' : 'text-emerald-200/50'}`}>
           {title}
         </span>
       </div>

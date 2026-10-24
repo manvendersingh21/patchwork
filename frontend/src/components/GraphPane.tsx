@@ -212,7 +212,7 @@ export default function GraphPane({ graphData, highlight }: { graphData: GraphDa
           />
         )}
       </div>
-      <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-slate-800 bg-slate-900/80 px-2.5 py-1.5 text-base text-slate-300">
+      <div className="pointer-events-none absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-emerald-900/60 bg-emerald-950/70 px-2.5 py-1.5 text-base text-emerald-100/90">
         {(Object.keys(LABEL_COLORS) as NodeLabel[]).map((l) => (
           <span key={l} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: LABEL_COLORS[l] }} />
@@ -224,7 +224,7 @@ export default function GraphPane({ graphData, highlight }: { graphData: GraphDa
           BRIDGE
         </span>
       </div>
-      <div className="pointer-events-none absolute bottom-3 right-3 z-10 text-base text-slate-500">
+      <div className="pointer-events-none absolute bottom-3 right-3 z-10 text-base text-emerald-200/40">
         Alt+I inject issue · Alt+R replay highlight
       </div>
     </div>

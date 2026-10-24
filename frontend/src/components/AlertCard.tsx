@@ -15,15 +15,15 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
   }
 
   return (
-    <div className="toast-in w-[26rem] max-w-[calc(100vw-2rem)] rounded-lg border border-emerald-400/40 bg-slate-900/95 p-3 shadow-xl shadow-emerald-500/10">
+    <div className="toast-in w-[26rem] max-w-[calc(100vw-2rem)] rounded-lg border border-emerald-400/40 bg-[#04140d]/95 p-3 shadow-xl shadow-emerald-500/10">
       <h3 className="text-lg font-semibold text-emerald-300">Someone you met can help with this</h3>
       <p className="mt-1 text-base text-slate-100">
         <span className="font-medium">{alert.contact}</span> · {alert.place} ·{' '}
         {new Date(alert.met_at).toLocaleString()}
       </p>
-      <p className="mt-1 text-base italic text-slate-400">&ldquo;{alert.note}&rdquo;</p>
-      <p className="mt-2 text-base text-slate-300">{alert.issue}</p>
-      <div className="mt-2 rounded border border-slate-700 bg-slate-950/60 p-2 text-base text-slate-200">
+      <p className="mt-1 text-base italic text-emerald-100/60">&ldquo;{alert.note}&rdquo;</p>
+      <p className="mt-2 text-base text-emerald-100/60">{alert.issue}</p>
+      <div className="mt-2 rounded border border-emerald-900/60 bg-emerald-950/50 p-2 text-base text-slate-100">
         {alert.draft}
       </div>
       <div className="mt-2 flex items-center gap-2">
@@ -35,11 +35,11 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
         </button>
         <button
           onClick={onDismiss}
-          className="rounded border border-slate-600 px-2.5 py-1 text-base text-slate-300 hover:bg-slate-800"
+          className="rounded border border-emerald-900/60 px-2.5 py-1 text-base text-emerald-100/70 hover:bg-emerald-950/60"
         >
           Dismiss
         </button>
-        <span className="ml-auto font-mono text-base text-slate-500">
+        <span className="ml-auto font-mono text-base text-emerald-100/70">
           {alert.path.edges.length} hops · {alert.run_time_ms} ms
         </span>
       </div>

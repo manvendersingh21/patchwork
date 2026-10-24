@@ -116,11 +116,11 @@ function SyncBox() {
         }}
         className="flex items-center gap-2"
       >
-        <span className="shrink-0 font-mono text-base text-slate-500">github.com/</span>
+        <span className="shrink-0 font-mono text-base text-emerald-200/40">github.com/</span>
         <input
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
-          className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-900/70 px-2 py-1 text-base text-slate-100 focus:border-accent focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-emerald-950/50 px-2 py-1 text-base text-slate-50 focus:border-emerald-400 focus:outline-none"
         />
         <button
           type="submit"
@@ -130,7 +130,7 @@ function SyncBox() {
           {busy ? 'Syncing…' : 'Sync my codebase'}
         </button>
       </form>
-      {status && <p className="truncate font-mono text-base text-slate-400">{status}</p>}
+      {status && <p className="truncate font-mono text-base text-emerald-100/60">{status}</p>}
     </section>
   )
 }
