@@ -27,8 +27,42 @@ pub struct Envelope {
     pub path: PathJson,
 }
 
+/// Percent-encode a userinfo component (username/password) for a connection URL.
+fn pct(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
+/// Build the FalkorDB connection URL. FALKORDB_URL (full URL, scheme included)
+/// wins; otherwise host/port come from the caller and FALKORDB_USERNAME,
+/// FALKORDB_PASSWORD and FALKORDB_TLS from the environment. TLS uses the
+/// falkors:// (rediss) scheme, which is what FalkorDB Cloud serves.
+fn connection_url(host: &str, port: u16) -> String {
+    if let Ok(url) = std::env::var("FALKORDB_URL") {
+        let url = url.trim().to_string();
+        if !url.is_empty() {
+            return url;
+        }
+    }
+    let username = std::env::var("FALKORDB_USERNAME").ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let password = std::env::var("FALKORDB_PASSWORD").ok().map(|s| s.trim().to_string()).filter(|s| !s.is_empty());
+    let tls = std::env::var("FALKORDB_TLS").map(|v| v.eq_ignore_ascii_case("true") || v == "1").unwrap_or(false);
+    let creds = match (&username, &password) {
+        (Some(u), Some(p)) => format!("{}:{}@", pct(u), pct(p)),
+        (None, Some(p)) => format!("default:{}@", pct(p)),
+        _ => String::new(),
+    };
+    format!("{}://{creds}{host}:{port}", if tls { "falkors" } else { "falkor" })
+}
+
 pub async fn connect(host: &str, port: u16, graph_name: &str) -> Result<AsyncGraph> {
-    let info: FalkorConnectionInfo = format!("falkor://{host}:{port}").as_str().try_into()?;
+    let info: FalkorConnectionInfo = connection_url(host, port).as_str().try_into()?;
     let client: FalkorAsyncClient = FalkorClientBuilder::new_async().with_connection_info(info).build().await?;
     Ok(client.select_graph(graph_name))
 }

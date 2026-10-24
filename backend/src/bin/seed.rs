@@ -33,7 +33,9 @@ fn slug(name: &str) -> String {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut g = connect("localhost", 6379, "patchwork").await?;
+    patchwork::config::load_dotenv();
+    let cfg = patchwork::config::Config::from_env();
+    let mut g = connect(&cfg.falkordb_host, cfg.falkordb_port, &cfg.graph_name).await?;
     let sessions = read_json("data/sessions.json")?;
     let topics = read_json("data/topics.json")?;
     let demo = read_json("data/demo_issues.json")?;

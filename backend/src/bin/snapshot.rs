@@ -283,7 +283,9 @@ async fn main() -> Result<()> {
         bail!("Usage: snapshot <export|restore> <path>");
     }
 
-    let mut g = connect("localhost", 6379, "patchwork").await?;
+    patchwork::config::load_dotenv();
+    let cfg = patchwork::config::Config::from_env();
+    let mut g = connect(&cfg.falkordb_host, cfg.falkordb_port, &cfg.graph_name).await?;
     let mode = &args[1];
     let path = Path::new(&args[2]);
 
