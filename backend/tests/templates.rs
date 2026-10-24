@@ -22,4 +22,4 @@ async fn t4_live() { run(T4_MEMORY_RECALL,"T4",serde_json::json!({"issue":"issue
 async fn t5_live() { run(T5_ISSUES_FOR_ENCOUNTER,"T5",serde_json::json!({"encounter":"enc:test"})).await; }
 #[tokio::test]
 #[ignore]
-async fn t6_live() { run(T6_TALKS_BY_TOPIC,"T6",serde_json::json!({"topics":"mcp-auth","day":"","after":""})).await; }
+async fn t6_live() { run(T6_TALKS_BY_TOPIC,"T6",serde_json::json!({"topics":"mcp-auth","day":"","after":"","before":""})).await; }

@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
         (
             "T1_TALKS_FOR_MY_ISSUES",
             T1_TALKS_FOR_MY_ISSUES,
-            json!({"person": person_uid, "day": "", "after": ""}),
+            json!({"person": person_uid, "day": "", "after": "", "before": ""}),
         ),
         (
             "T2_TALKS_FOR_ISSUE",
@@ -79,7 +79,7 @@ async fn main() -> Result<()> {
         (
             "T6_TALKS_BY_TOPIC",
             T6_TALKS_BY_TOPIC,
-            json!({"topics": "mcp-auth", "day": "", "after": ""}),
+            json!({"topics": "mcp-auth", "day": "", "after": "", "before": ""}),
         ),
     ];
 

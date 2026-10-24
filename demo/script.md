@@ -69,10 +69,10 @@ Expected first row from the current `data/sessions.json`: **U26-09 "Open pull re
 Fine-grained authorization for hosted MCP servers"**, Nick Taylor (Pomerium), 2026-10-29 10:30, Demo Stage
 (Festival Pavilion) — reached from issue #1 through `mcp-auth`.
 
-Caveat to know before you click: T1 only has an `after` bound, so "morning" is not actually enforced. The same
-call also returns U26-10 "Treat your AI context as infrastructure" at 13:00 from issue #4 through `ai-context`.
-Rows are ordered by day then start time, so the storyline talk is first either way. Either accept the second row
-as a bonus hit or say "day 2 from 10:00" instead of "morning".
+Caveat to know before you click: "morning" is now enforced as an upper bound — the server derives
+`before = "12:00"` from the word "morning" in the question, so afternoon talks no longer sneak in. Asking
+about a day that doesn't exist (e.g. "day 3" or "friday") returns the conference's actual days
+(2026-10-28 and 2026-10-29) instead of silently clamping to the closest real day.
 
 ## Real vs staged
 

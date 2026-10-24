@@ -1,4 +1,4 @@
-use crate::{config::Config, github::GithubClient, graph::{connect,query_rows,run_template,write_query}, llm, templates::{T1_TALKS_FOR_MY_ISSUES,T3_PEOPLE_TO_MEET,T4_MEMORY_RECALL,T6_TALKS_BY_TOPIC, normalize_day, normalize_after}};
+use crate::{config::Config, github::GithubClient, graph::{connect,query_rows,run_template,write_query}, llm, templates::{DayMention,T1_TALKS_FOR_MY_ISSUES,T3_PEOPLE_TO_MEET,T4_MEMORY_RECALL,T6_TALKS_BY_TOPIC,T7_CONFERENCE_DAYS, day_from_question, normalize_day, normalize_after, tokenize}};
 use axum::{extract::{Query,Path,State}, http::StatusCode, response::IntoResponse, routing::{get,post}, Json, Router};
 use chrono::Utc;
 use serde::Deserialize;
@@ -42,6 +42,16 @@ async fn encounter(State(s):State<Arc<AppState>>,Json(b):Json<EncounterBody>)->i
 
 #[derive(Deserialize)]struct AskBody{question:String,person_uid:Option<String>}
 async fn ask(State(s):State<Arc<AppState>>,Json(b):Json<AskBody>)->impl IntoResponse{
+    // L4 fix: read the day mention from the question itself, not from the model.
+    let mention=day_from_question(&b.question);
+    if let DayMention::Invalid(raw)=&mention{
+        let Ok(mut g)=connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await else{return Json(json!({"error":"FalkorDB unavailable"})).into_response()};
+        let Ok(mut envelope)=run_template(&mut g,"T7",T7_CONFERENCE_DAYS,json!({})).await else{return Json(json!({"error":"Graph query failed"})).into_response()};
+        let days=envelope.rows.iter().filter_map(|r|r.get("day").and_then(Value::as_str).map(str::to_string)).collect::<Vec<_>>().join(" and ");
+        envelope.params=json!({"mentioned":raw});
+        let mut output=serde_json::to_value(envelope).unwrap_or(json!({}));output["answer"]=json!(format!("The conference covers only {days} — there is no {raw}."));
+        return Json(output).into_response();
+    }
     let key=match std::env::var("OPENAI_API_KEY"){Ok(k)=>k,Err(_)=>return (StatusCode::SERVICE_UNAVAILABLE,Json(json!({"error":"OPENAI_API_KEY is not configured"}))).into_response()};
     let person=b.person_uid.unwrap_or_else(||format!("person:gh:{}",s.config.presenter_handle));
     let model=std::env::var("OPENAI_MODEL").unwrap_or_else(|_|"gpt-4o-mini".into());
@@ -58,11 +68,18 @@ async fn ask(State(s):State<Arc<AppState>>,Json(b):Json<AskBody>)->impl IntoResp
     let call=&resp["choices"][0]["message"]["tool_calls"][0];let name=call["function"]["name"].as_str().unwrap_or("");
     if name.is_empty(){return Json(json!({"answer":"I can only answer what the graph can trace","quick_questions":["Which talks after lunch help with my open issues?","Who should I meet?"],"rows":[],"path":{"nodes":[],"edges":[]}})).into_response()}
     let args:Value=serde_json::from_str(call["function"]["arguments"].as_str().unwrap_or("{}")).unwrap_or(json!({}));
+    // A valid day mention in the question overrides whatever day the model passed.
+    let day_arg=match &mention{DayMention::Valid(iso)=>iso.clone(),_=>args["day"].as_str().unwrap_or("").to_string()};
+    // Time-of-day words become hard bounds; zero-padded HH:MM compares lexically.
+    let toks=tokenize(&b.question);let mut after=normalize_after(args["after"].as_str().unwrap_or(""));let mut before=String::new();
+    if toks.iter().any(|t|t=="morning"){before="12:00".into();if after.as_str()>="12:00"{after=String::new()}}
+    if toks.iter().any(|t|t=="afternoon"){after=after.max("12:00".into())}
+    if toks.iter().any(|t|t=="evening"){after=after.max("17:00".into())}
     let params=match name{
-        "talks_for_my_issues"=>json!({"person":person,"day":normalize_day(args["day"].as_str().unwrap_or("")),"after":normalize_after(args["after"].as_str().unwrap_or(""))}),
+        "talks_for_my_issues"=>json!({"person":person,"day":normalize_day(&day_arg),"after":after,"before":before}),
         "people_to_meet"=>json!({"person":person}),
         "memory_recall"=>json!({"issue":args["issue"].as_str().unwrap_or("")}),
-        "talks_by_topic"=>{let hits=llm::classify(&[b.question.clone()]).await.unwrap_or_default().into_iter().next().unwrap_or_default();json!({"topics":hits.into_iter().map(|h|h.slug).collect::<Vec<_>>().join(","),"day":normalize_day(args["day"].as_str().unwrap_or("")),"after":normalize_after(args["after"].as_str().unwrap_or(""))})},
+        "talks_by_topic"=>{let hits=llm::classify(&[b.question.clone()]).await.unwrap_or_default().into_iter().next().unwrap_or_default();json!({"topics":hits.into_iter().map(|h|h.slug).collect::<Vec<_>>().join(","),"day":normalize_day(&day_arg),"after":after,"before":before})},
         _=>return Json(json!({"answer":"I can only answer what the graph can trace","rows":[],"path":{"nodes":[],"edges":[]}})).into_response()
     };
     let (template,cypher)=match name{"talks_for_my_issues"=>("T1",T1_TALKS_FOR_MY_ISSUES),"people_to_meet"=>("T3",T3_PEOPLE_TO_MEET),"memory_recall"=>("T4",T4_MEMORY_RECALL),_=>("T6",T6_TALKS_BY_TOPIC)};
