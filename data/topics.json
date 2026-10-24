@@ -1,0 +1,27 @@
+{
+  "version": "draft-1 (user-supplied labels; pending human review, then frozen)",
+  "topics": [
+    {"slug": "copilot", "name": "Copilot", "description": "GitHub Copilot products and usage"},
+    {"slug": "agentic-workflows", "name": "Agentic Workflows", "description": "Agents doing multi-step work in dev workflows"},
+    {"slug": "platform-engineering", "name": "Platform Engineering", "description": "Internal developer platforms and shared infrastructure"},
+    {"slug": "enterprise-ai-adoption", "name": "Enterprise AI Adoption", "description": "Rolling out AI tools across large organizations"},
+    {"slug": "developer-experience", "name": "Developer Experience", "description": "Tooling and workflows that make developers faster"},
+    {"slug": "open-source", "name": "Open Source", "description": "Building and running open source projects"},
+    {"slug": "community-governance", "name": "Community Governance", "description": "How open source communities make decisions"},
+    {"slug": "supply-chain-security", "name": "Supply Chain Security", "description": "Attacks and defenses across software dependencies and build pipelines"},
+    {"slug": "github-actions", "name": "GitHub Actions", "description": "GitHub Actions workflows and runners"},
+    {"slug": "cicd", "name": "CI/CD", "description": "Continuous integration and delivery pipelines"},
+    {"slug": "dependencies", "name": "Dependencies", "description": "Managing and resolving package dependencies"},
+    {"slug": "package-management", "name": "Package Management", "description": "Package managers and registries"},
+    {"slug": "frontier-models", "name": "Frontier Models", "description": "Latest frontier model capabilities for developers"},
+    {"slug": "ai-context", "name": "AI Context", "description": "Context, instructions and state given to AI agents"},
+    {"slug": "deterministic-verification", "name": "Deterministic Verification", "description": "Checking agent output with deterministic code and tests"},
+    {"slug": "ai-assisted-testing", "name": "AI-Assisted Testing", "description": "Using AI to write and run tests"},
+    {"slug": "agentic-security", "name": "Agentic Security", "description": "Security risks and controls for autonomous agents"},
+    {"slug": "rca-agent", "name": "RCA Agent", "description": "Agents that investigate incidents and find root causes"},
+    {"slug": "ai-operations", "name": "AI Operations", "description": "Running AI systems in production"},
+    {"slug": "mcp-auth", "name": "MCP Auth", "description": "Authorization for Model Context Protocol servers and tool calls"},
+    {"slug": "oauth", "name": "OAuth", "description": "OAuth scopes and token-based authorization"},
+    {"slug": "agent-memory", "name": "Agent Memory", "description": "Persisting and recalling agent memory across sessions"}
+  ]
+}

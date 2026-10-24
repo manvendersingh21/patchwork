@@ -1,0 +1,10 @@
+{
+  "repo": "manvendersingh21/deepcore-n1",
+  "label": "DEMO: seeded in graph only, not filed on GitHub",
+  "issues": [
+    {"number": 14, "title": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)", "topics": ["mcp-auth", "agentic-security", "oauth"]},
+    {"number": 27, "title": "Race condition & hallucinated root-cause in multi-agent state handoff during 2am incident triage", "topics": ["rca-agent", "deterministic-verification"]},
+    {"number": 33, "title": "Lock down GitHub Actions runner workflow permissions and npm dependency supply-chain checks", "topics": ["github-actions", "supply-chain-security", "cicd"]},
+    {"number": 41, "title": "Standardize shared agent memory & context infrastructure across local and cloud runtimes", "topics": ["ai-context", "agent-memory", "platform-engineering"]}
+  ]
+}

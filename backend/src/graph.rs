@@ -3,7 +3,7 @@ use anyhow::Result;
 use falkordb::{AsyncGraph, FalkorAsyncClient, FalkorClientBuilder, FalkorConnectionInfo, FalkorValue};
 use futures_util::StreamExt;
 use serde::Serialize;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct PathNode { pub uid: String, pub label: String, pub name: String, pub state: String }
@@ -33,37 +33,41 @@ pub async fn connect(host: &str, port: u16, graph_name: &str) -> Result<AsyncGra
     Ok(client.select_graph(graph_name))
 }
 
-fn prop_str(props: &HashMap<String, FalkorValue>, key: &str) -> String {
-    match props.get(key) { Some(FalkorValue::String(s)) => s.clone(), _ => String::new() }
+fn str_of(v: &FalkorValue) -> String {
+    match v { FalkorValue::String(s) => s.clone(), _ => String::new() }
 }
 
-/// Walk one returned path into the {nodes, edges} shape. Edges map entity ids to uids.
-pub fn serialize_path(p: &falkordb::Path) -> PathJson {
-    let mut out = PathJson::default();
-    let mut id_to_uid: HashMap<i64, String> = HashMap::new();
-    for n in &p.nodes {
-        let uid = prop_str(&n.properties, "uid");
-        id_to_uid.insert(n.entity_id, uid.clone());
-        let name = { let v = prop_str(&n.properties, "name"); if v.is_empty() { prop_str(&n.properties, "title") } else { v } };
-        out.nodes.push(PathNode {
-            uid,
-            label: n.labels.first().cloned().unwrap_or_default(),
-            name,
-            state: prop_str(&n.properties, "state"),
-        });
-    }
-    for e in &p.relationships {
-        out.edges.push(PathEdge {
-            kind: e.relationship_type.clone(),
-            src_uid: id_to_uid.get(&e.src_node_id).cloned().unwrap_or_default(),
-            dst_uid: id_to_uid.get(&e.dst_node_id).cloned().unwrap_or_default(),
-        });
-    }
-    out
+fn array_of(v: &FalkorValue) -> &[FalkorValue] {
+    match v { FalkorValue::Array(a) => a.as_slice(), _ => &[] }
+}
+
+/// Parse the `nodes` column: [[uid, label, name, state], ...].
+fn parse_nodes(v: &FalkorValue) -> Vec<PathNode> {
+    array_of(v).iter().map(|n| {
+        let f = array_of(n);
+        PathNode {
+            uid: f.first().map(str_of).unwrap_or_default(),
+            label: f.get(1).map(str_of).unwrap_or_default(),
+            name: f.get(2).map(str_of).unwrap_or_default(),
+            state: f.get(3).map(str_of).unwrap_or_default(),
+        }
+    }).collect()
+}
+
+/// Parse the `edges` column: [[type, src_uid, dst_uid], ...].
+fn parse_edges(v: &FalkorValue) -> Vec<PathEdge> {
+    array_of(v).iter().map(|e| {
+        let f = array_of(e);
+        PathEdge {
+            kind: f.first().map(str_of).unwrap_or_default(),
+            src_uid: f.get(1).map(str_of).unwrap_or_default(),
+            dst_uid: f.get(2).map(str_of).unwrap_or_default(),
+        }
+    }).collect()
 }
 
 /// Run a Cypher string with params and wrap the result in the envelope.
-/// `params` is a flat object; each value is passed as a typed Falkor parameter.
+/// `nodes` and `edges` columns are the path; they are merged across rows and deduped by uid.
 pub async fn run_template(
     g: &mut AsyncGraph,
     template: &str,
@@ -87,16 +91,21 @@ pub async fn run_template(
         let values = row?.into_values();
         let mut r = BTreeMap::new();
         for (col, v) in header.iter().zip(values.iter()) {
-            match v {
-                FalkorValue::Path(p) => {
-                    let pj = serialize_path(p);
-                    hops = hops.max(pj.edges.len());
-                    for n in pj.nodes { if seen_nodes.insert(n.uid.clone()) { path.nodes.push(n); } }
-                    for e in pj.edges {
+            match col.as_str() {
+                "nodes" => {
+                    for n in parse_nodes(v) { if seen_nodes.insert(n.uid.clone()) { path.nodes.push(n); } }
+                }
+                "edges" => {
+                    let edges = parse_edges(v);
+                    for e in edges.iter().cloned() {
                         if seen_edges.insert((e.kind.clone(), e.src_uid.clone(), e.dst_uid.clone())) { path.edges.push(e); }
                     }
                 }
-                other => { r.insert(col.clone(), falkor_to_json(other)); }
+                "hops" => {
+                    if let FalkorValue::I64(h) = v { hops = hops.max(*h as usize); }
+                    r.insert(col.clone(), falkor_to_json(v));
+                }
+                _ => { r.insert(col.clone(), falkor_to_json(v)); }
             }
         }
         if !r.is_empty() { rows.push(r); }
