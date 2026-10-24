@@ -18,6 +18,14 @@ tunnel: ## Expose the MCP server publicly; prints the URL to paste into ChatGPT 
 	echo 'public MCP URL: '$$url'/mcp'; \
 	echo 'then restart with: MCP_ALLOWED_HOSTS='$${url#https://}' cargo run --bin mcp_http'
 
+ui-public: ## Serve the built UI on all interfaces at :4173 (for tunneling)
+	cd frontend && npm run build && npm run preview -- --host --port 4173
+
+ui-tunnel: ## Expose the UI publicly; prints the URL (run make ui-public first)
+	@echo 'starting cloudflared…'; (cloudflared tunnel --url http://127.0.0.1:4173 > /tmp/cloudflared_ui.log 2>&1 &); \
+	sleep 6; url=$$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cloudflared_ui.log | head -1); \
+	echo 'public UI URL: '$$url
+
 ui:
 	cd frontend && npm run dev
 
