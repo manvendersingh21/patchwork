@@ -19,7 +19,7 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
       <h3 className="text-lg font-semibold text-emerald-300">Someone you met can help with this</h3>
       <p className="mt-1 text-base text-slate-100">
         <span className="font-medium">{alert.contact}</span> · {alert.place} ·{' '}
-        {new Date(alert.met_at).toLocaleString()}
+        {alert.met_at ? new Date(alert.met_at).toLocaleString() : ''}
       </p>
       <p className="mt-1 text-base italic text-emerald-100/60">&ldquo;{alert.note}&rdquo;</p>
       <p className="mt-2 text-base text-emerald-100/60">{alert.issue}</p>
@@ -40,7 +40,7 @@ export default function AlertCard({ alert, onDismiss }: { alert: Alert; onDismis
           Dismiss
         </button>
         <span className="ml-auto font-mono text-base text-emerald-100/70">
-          {alert.path.edges.length} hops · {alert.run_time_ms} ms
+          {alert.hops} hops
         </span>
       </div>
     </div>

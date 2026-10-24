@@ -12,9 +12,11 @@ pub struct Config {
     pub watch_interval_sec: u64,
 }
 
+/// Reads `.env` from the current directory, falling back to the repo root, so binaries
+/// launched by MCP clients from any directory still reach the configured graph.
 pub fn load_dotenv() {
-    let path = Path::new(".env");
-    let Ok(content) = fs::read_to_string(path) else { return; };
+    let repo_env = Path::new(env!("CARGO_MANIFEST_DIR")).join("../.env");
+    let Ok(content) = fs::read_to_string(".env").or_else(|_| fs::read_to_string(&repo_env)) else { return; };
     for line in content.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') { continue; }

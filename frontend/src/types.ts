@@ -108,9 +108,8 @@ export interface Alert {
   place: string
   met_at: string
   draft: string
-  path: PathShape
-  cypher: string
-  run_time_ms: number
+  path: string[]
+  hops: string
 }
 
 export interface TopicItem {

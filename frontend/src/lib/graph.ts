@@ -64,6 +64,11 @@ export function highlightFromPath(path: PathShape, nonce: number): Highlight {
   }
 }
 
+/** Alerts from /api/alerts carry the path as bare uids, so only nodes can be highlighted. */
+export function highlightFromUids(uids: string[], nonce: number): Highlight {
+  return { nodes: new Set(uids), edges: new Set(), nonce }
+}
+
 export function degreesOf(edges: GraphEdge[]): Map<string, number> {
   const deg = new Map<string, number>()
   for (const e of edges) {

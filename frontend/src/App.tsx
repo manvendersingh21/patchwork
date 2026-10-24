@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ACT3_ISSUE, IS_MOCK, PRESENTER_HANDLE, api } from './api'
-import { highlightFromPath, type Highlight } from './lib/graph'
+import { highlightFromPath, highlightFromUids, type Highlight } from './lib/graph'
 import type { AgentEvent, Alert, AskEnvelope, GraphData, HealthStatus } from './types'
 import AgentTicker from './components/AgentTicker'
 import AlertCard from './components/AlertCard'
@@ -262,7 +262,7 @@ export default function App() {
         const a = list[0]
         alertRef.current = a
         setAlert(a)
-        setHighlight(highlightFromPath(a.path, nextNonce()))
+        setHighlight(highlightFromUids(a.path, nextNonce()))
         openWin('graph')
       } catch {
         /* ignore */
