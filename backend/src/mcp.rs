@@ -17,13 +17,13 @@ use falkordb::AsyncGraph;
 pub struct TalksForMyIssuesArgs {
     /// Person uid, e.g. person:gh:<handle>. Defaults to the presenter.
     pub person: String,
-    /// Day filter as YYYY-MM-DD, or empty for any day.
+    /// Day filter as YYYY-MM-DD (2026-10-28 or 2026-10-29; "day 1"/"day 2" map too), or empty for any day. Other values are rejected.
     #[serde(default)]
     pub day: String,
-    /// Earliest start time HH:MM (24h), or empty for any time.
+    /// Earliest start time HH:MM (24h, e.g. 10:30; "9am" maps too), or empty for any time. Invalid times are rejected.
     #[serde(default)]
     pub after: String,
-    /// Latest start time HH:MM (24h), or empty for any time.
+    /// Latest start time HH:MM (24h), or empty for any time. Invalid times are rejected.
     #[serde(default)]
     pub before: String,
 }
@@ -36,7 +36,7 @@ pub struct IssueArgs {
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct TalksByTopicArgs {
-    /// Comma-separated topic slugs, e.g. "mcp-auth,agentic-security".
+    /// Comma-separated topic slugs from list_topics, e.g. "mcp-auth,agentic-security". Unknown slugs are rejected.
     pub topics: String,
     #[serde(default)]
     pub day: String,
@@ -146,11 +146,16 @@ fn person_uid(person: &str) -> String {
     }
 }
 
+/// The graph's closed set of topic slugs — the same set list_topics shows.
+async fn known_topics(g: &mut AsyncGraph) -> Result<std::collections::HashSet<String>, McpError> {
+    let rows = query_rows(g, "MATCH (t:Topic) RETURN t.slug AS slug", serde_json::json!({}))
+        .await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    Ok(rows.iter().filter_map(|r| r["slug"].as_str().map(str::to_string)).collect())
+}
+
 /// Topic slugs are a closed set; reject anything list_topics would not show (as log_encounter does).
 async fn require_topics(g: &mut AsyncGraph, topics: &[String]) -> Result<(), McpError> {
-    let known = query_rows(g, "MATCH (t:Topic) RETURN t.slug AS slug", serde_json::json!({}))
-        .await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-    let known: std::collections::HashSet<String> = known.iter().filter_map(|r| r["slug"].as_str().map(str::to_string)).collect();
+    let known = known_topics(g).await?;
     let unknown: Vec<&String> = topics.iter().filter(|t| !known.contains(t.as_str())).collect();
     if topics.is_empty() || !unknown.is_empty() {
         return Err(McpError::invalid_params(format!("topics must be non-empty slugs from list_topics; unknown: {unknown:?}"), None));
@@ -158,27 +163,72 @@ async fn require_topics(g: &mut AsyncGraph, topics: &[String]) -> Result<(), Mcp
     Ok(())
 }
 
+/// Strict `day` param: empty means no filter; anything else must map to a real
+/// conference day, or the call is rejected instead of silently widening the query.
+fn strict_day(raw: &str) -> Result<String, String> {
+    if raw.trim().is_empty() { return Ok(String::new()); }
+    let day = normalize_day(raw);
+    if day.is_empty() {
+        Err(format!("invalid day '{}': the conference days are 2026-10-28 and 2026-10-29, e.g. \"2026-10-29\" or \"day 2\"", raw.trim()))
+    } else {
+        Ok(day)
+    }
+}
+
+/// Strict `after`/`before` param: empty means no filter; anything else must
+/// parse as a 24h HH:MM time, or the call is rejected.
+fn strict_time(raw: &str) -> Result<String, String> {
+    if raw.trim().is_empty() { return Ok(String::new()); }
+    let t = normalize_after(raw);
+    if t.is_empty() {
+        Err(format!("invalid time '{}': use 24h HH:MM, e.g. 10:30", raw.trim()))
+    } else {
+        Ok(t)
+    }
+}
+
+/// The strict_* helpers speak String errors; tools turn them into invalid_params.
+fn bad_param(e: String) -> McpError {
+    McpError::invalid_params(e, None)
+}
+
 #[tool_router]
 impl PatchworkMcp {
     #[tool(description = "Talks that cover topics of the person's open issues, as a 5-hop path (Person→Repo→Issue→Topic→Talk→Speaker). Optional day and earliest start time.")]
     async fn talks_for_my_issues(&self, Parameters(a): Parameters<TalksForMyIssuesArgs>) -> Result<CallToolResult, McpError> {
-        let params = serde_json::json!({"person": a.person, "day": normalize_day(&a.day), "after": normalize_after(&a.after), "before": normalize_after(&a.before)});
+        let person = a.person.trim();
+        if person.is_empty() {
+            return Err(McpError::invalid_params("person is required, e.g. person:gh:<handle>", None));
+        }
+        let params = serde_json::json!({"person": person, "day": strict_day(&a.day).map_err(bad_param)?, "after": strict_time(&a.after).map_err(bad_param)?, "before": strict_time(&a.before).map_err(bad_param)?});
         self.run("T1", T1_TALKS_FOR_MY_ISSUES, params).await
     }
 
     #[tool(description = "Talks that cover the topics of one issue, with the path that connects them.")]
     async fn talks_for_issue(&self, Parameters(a): Parameters<IssueArgs>) -> Result<CallToolResult, McpError> {
-        self.run("T2", T2_TALKS_FOR_ISSUE, serde_json::json!({"issue": a.issue})).await
+        let issue = a.issue.trim();
+        if issue.is_empty() || !issue.contains(':') || !issue.contains('#') {
+            return Err(McpError::invalid_params("issue must be an issue uid like issue:<owner>/<repo>#<number> or issue:notes/<handle>#<id>", None));
+        }
+        self.run("T2", T2_TALKS_FOR_ISSUE, serde_json::json!({"issue": issue})).await
     }
 
     #[tool(description = "Speakers relevant to the person's open issues whom they have not logged meeting yet.")]
     async fn people_to_meet(&self, Parameters(a): Parameters<PeopleToMeetArgs>) -> Result<CallToolResult, McpError> {
-        self.run("T3", T3_PEOPLE_TO_MEET, serde_json::json!({"person": a.person, "limit": 5})).await
+        let person = a.person.trim();
+        if person.is_empty() {
+            return Err(McpError::invalid_params("person is required, e.g. person:gh:<handle>", None));
+        }
+        self.run("T3", T3_PEOPLE_TO_MEET, serde_json::json!({"person": person, "limit": 5})).await
     }
 
     #[tool(description = "People the user met who discussed the topics of one issue (memory recall), newest first.")]
     async fn memory_recall(&self, Parameters(a): Parameters<IssueArgs>) -> Result<CallToolResult, McpError> {
-        self.run("T4", T4_MEMORY_RECALL, serde_json::json!({"issue": a.issue})).await
+        let issue = a.issue.trim();
+        if issue.is_empty() {
+            return Err(McpError::invalid_params("issue is required, e.g. issue:<owner>/<repo>#<number>", None));
+        }
+        self.run("T4", T4_MEMORY_RECALL, serde_json::json!({"issue": issue})).await
     }
 
     #[tool(description = "The closed topic list (slug and name). Use these slugs for talks_by_topic and log_encounter.")]
@@ -195,13 +245,7 @@ impl PatchworkMcp {
             return Err(McpError::invalid_params("note and met_name are required", None));
         }
         let mut g = self.graph.lock().await;
-        let known = query_rows(&mut g, "MATCH (t:Topic) RETURN t.slug AS slug", serde_json::json!({}))
-            .await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let known: std::collections::HashSet<String> = known.iter().filter_map(|r| r["slug"].as_str().map(str::to_string)).collect();
-        let unknown: Vec<&String> = a.topics.iter().filter(|t| !known.contains(t.as_str())).collect();
-        if a.topics.is_empty() || !unknown.is_empty() {
-            return Err(McpError::invalid_params(format!("topics must be non-empty slugs from list_topics; unknown: {unknown:?}"), None));
-        }
+        require_topics(&mut g, &a.topics).await?;
         let uid = format!("enc:{}", uuid::Uuid::new_v4());
         let contact = if a.met_handle.trim().is_empty() {
             format!("person:name:{}", a.met_name.trim().to_lowercase().split_whitespace().collect::<Vec<_>>().join("-"))
@@ -281,11 +325,21 @@ impl PatchworkMcp {
 
     #[tool(description = "Recall what the user logged as learned, newest first, optionally filtered to one topic slug from list_topics (empty = all). Summarize these lessons back to the user.")]
     async fn recall_learnings(&self, Parameters(a): Parameters<RecallLearningsArgs>) -> Result<CallToolResult, McpError> {
+        if a.person.trim().is_empty() {
+            return Err(McpError::invalid_params("person is required, e.g. a GitHub handle or plain name", None));
+        }
         let mut g = self.graph.lock().await;
         let person = person_uid(&a.person);
+        let topic = a.topic.trim();
+        if !topic.is_empty() && !known_topics(&mut g).await?.contains(topic) {
+            return Err(McpError::invalid_params(format!("topic must be a slug from list_topics; unknown: [\"{topic}\"]"), None));
+        }
         // Results come back column-typed (no arrays), so fan out one row per learning×topic and group here.
-        let rows = query_rows(&mut g, "MATCH (p:Person {uid: $person})-[:LOGGED]->(l:Learning) OPTIONAL MATCH (l)-[:ABOUT]->(t:Topic) WHERE ($topic = '' OR t.slug = $topic) RETURN l.uid AS uid, l.text AS text, l.source AS source, l.learned_at AS learned_at, t.slug AS topic ORDER BY l.learned_at DESC",
-            serde_json::json!({"person": person, "topic": a.topic.trim()})).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        // No topic predicate in the query: filtering the OPTIONAL MATCH would drop only the non-matching
+        // topic rows, so every learning would still come back (untagged ones) and multi-topic lessons
+        // would lose their other tags. The filter is applied to the grouped learnings below instead.
+        let rows = query_rows(&mut g, "MATCH (p:Person {uid: $person})-[:LOGGED]->(l:Learning) OPTIONAL MATCH (l)-[:ABOUT]->(t:Topic) RETURN l.uid AS uid, l.text AS text, l.source AS source, l.learned_at AS learned_at, t.slug AS topic ORDER BY l.learned_at DESC",
+            serde_json::json!({"person": person})).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
         let mut learnings: Vec<serde_json::Value> = Vec::new();
         let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
         for r in rows {
@@ -293,12 +347,16 @@ impl PatchworkMcp {
             let slug = r["topic"].as_str().unwrap_or_default().to_string();
             if let Some(&i) = seen.get(&uid) {
                 if !slug.is_empty() { if let Some(ts) = learnings[i]["topics"].as_array_mut() { ts.push(serde_json::Value::String(slug)); } }
-            } else if learnings.len() < 20 {
+            } else {
                 let topics = if slug.is_empty() { Vec::new() } else { vec![serde_json::Value::String(slug)] };
                 seen.insert(uid.clone(), learnings.len());
                 learnings.push(serde_json::json!({"uid": uid, "text": r["text"], "source": r["source"], "learned_at": r["learned_at"], "topics": topics}));
             }
         }
+        if !topic.is_empty() {
+            learnings.retain(|l| l["topics"].as_array().map_or(false, |ts| ts.iter().any(|t| t.as_str() == Some(topic))));
+        }
+        learnings.truncate(20);
         text_result(&serde_json::json!({"person_uid": person, "learnings": learnings}))
     }
 
@@ -312,7 +370,20 @@ impl PatchworkMcp {
 
     #[tool(description = "Talks about given topics, filtered by day and earliest start time, with their path.")]
     async fn talks_by_topic(&self, Parameters(a): Parameters<TalksByTopicArgs>) -> Result<CallToolResult, McpError> {
-        let params = serde_json::json!({"topics": a.topics, "day": normalize_day(&a.day), "after": normalize_after(&a.after), "before": normalize_after(&a.before)});
+        let slugs: Vec<String> = a.topics.split(',').map(str::trim).filter(|s| !s.is_empty()).map(str::to_string).collect();
+        if slugs.is_empty() {
+            return Err(McpError::invalid_params("topics must be a non-empty comma-separated list of slugs from list_topics, e.g. \"mcp-auth,agentic-security\"", None));
+        }
+        {
+            // Same closed-set check as the write tools: an unknown slug errors instead of matching zero talks.
+            let mut g = self.graph.lock().await;
+            let known = known_topics(&mut g).await?;
+            let unknown: Vec<&String> = slugs.iter().filter(|t| !known.contains(t.as_str())).collect();
+            if !unknown.is_empty() {
+                return Err(McpError::invalid_params(format!("topics must be non-empty slugs from list_topics; unknown: {unknown:?}"), None));
+            }
+        }
+        let params = serde_json::json!({"topics": slugs.join(","), "day": strict_day(&a.day).map_err(bad_param)?, "after": strict_time(&a.after).map_err(bad_param)?, "before": strict_time(&a.before).map_err(bad_param)?});
         self.run("T6", T6_TALKS_BY_TOPIC, params).await
     }
 }
@@ -323,5 +394,28 @@ impl ServerHandler for PatchworkMcp {
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new("patchwork", env!("CARGO_PKG_VERSION")))
             .with_instructions("PatchWork graph tools. Each tool runs a fixed, verified Cypher template on FalkorDB. Arguments are typed values only; no Cypher is accepted.")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn strict_day_forms() {
+        assert_eq!(strict_day("2026-10-28"), Ok("2026-10-28".to_string()));
+        assert_eq!(strict_day("day 2"), Ok("2026-10-29".to_string()));
+        assert_eq!(strict_day(""), Ok(String::new()));
+        assert_eq!(strict_day("   "), Ok(String::new()));
+        let err = strict_day("2030-01-01").unwrap_err();
+        assert!(err.contains("2026-10-28") && err.contains("2026-10-29") && err.contains("2030-01-01"));
+    }
+
+    #[test]
+    fn strict_time_forms() {
+        assert_eq!(strict_time("10:30"), Ok("10:30".to_string()));
+        assert_eq!(strict_time("9am"), Ok("09:00".to_string()));
+        assert_eq!(strict_time(""), Ok(String::new()));
+        assert_eq!(strict_time("99:99"), Err("invalid time '99:99': use 24h HH:MM, e.g. 10:30".to_string()));
     }
 }
