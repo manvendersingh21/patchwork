@@ -99,7 +99,7 @@ fn text_result<T: serde::Serialize>(v: &T) -> Result<CallToolResult, McpError> {
 impl PatchworkMcp {
     #[tool(description = "Talks that cover topics of the person's open issues, as a 5-hop path (Person→Repo→Issue→Topic→Talk→Speaker). Optional day and earliest start time.")]
     async fn talks_for_my_issues(&self, Parameters(a): Parameters<TalksForMyIssuesArgs>) -> Result<CallToolResult, McpError> {
-        let params = serde_json::json!({"person": a.person, "day": a.day, "after": a.after});
+        let params = serde_json::json!({"person": a.person, "day": normalize_day(&a.day), "after": normalize_after(&a.after)});
         self.run("T1", T1_TALKS_FOR_MY_ISSUES, params).await
     }
 
@@ -169,7 +169,7 @@ impl PatchworkMcp {
 
     #[tool(description = "Talks about given topics, filtered by day and earliest start time, with their path.")]
     async fn talks_by_topic(&self, Parameters(a): Parameters<TalksByTopicArgs>) -> Result<CallToolResult, McpError> {
-        let params = serde_json::json!({"topics": a.topics, "day": a.day, "after": a.after});
+        let params = serde_json::json!({"topics": a.topics, "day": normalize_day(&a.day), "after": normalize_after(&a.after)});
         self.run("T6", T6_TALKS_BY_TOPIC, params).await
     }
 }

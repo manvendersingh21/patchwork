@@ -1,4 +1,4 @@
-use crate::{config::Config, github::GithubClient, graph::{connect,query_rows,run_template,write_query}, llm, templates::{T1_TALKS_FOR_MY_ISSUES,T3_PEOPLE_TO_MEET,T4_MEMORY_RECALL,T6_TALKS_BY_TOPIC}};
+use crate::{config::Config, github::GithubClient, graph::{connect,query_rows,run_template,write_query}, llm, templates::{T1_TALKS_FOR_MY_ISSUES,T3_PEOPLE_TO_MEET,T4_MEMORY_RECALL,T6_TALKS_BY_TOPIC, normalize_day, normalize_after}};
 use axum::{extract::{Query,Path,State}, http::StatusCode, response::IntoResponse, routing::{get,post}, Json, Router};
 use chrono::Utc;
 use serde::Deserialize;
@@ -46,10 +46,10 @@ async fn ask(State(s):State<Arc<AppState>>,Json(b):Json<AskBody>)->impl IntoResp
     let person=b.person_uid.unwrap_or_else(||format!("person:gh:{}",s.config.presenter_handle));
     let model=std::env::var("OPENAI_MODEL").unwrap_or_else(|_|"gpt-4o-mini".into());
     let tools=json!([
-        {"type":"function","function":{"name":"talks_for_my_issues","description":"Find talks relevant to the presenter's open repo issues","parameters":{"type":"object","properties":{"day":{"type":"string"},"after":{"type":"string"}},"required":[],"additionalProperties":false}}},
+        {"type":"function","function":{"name":"talks_for_my_issues","description":"Find talks relevant to the presenter's open repo issues","parameters":{"type":"object","properties":{"day":{"type":"string","description":"Conference day as ISO date: 2026-10-28 (day 1, Wed) or 2026-10-29 (day 2, Thu). Empty means any day."},"after":{"type":"string","description":"Earliest talk start time, 24h HH:MM, e.g. 10:00. Empty means any time."}},"required":[],"additionalProperties":false}}},
         {"type":"function","function":{"name":"people_to_meet","description":"Find relevant speakers not met yet","parameters":{"type":"object","properties":{},"required":[],"additionalProperties":false}}},
         {"type":"function","function":{"name":"memory_recall","description":"Find a person met who can help with an issue","parameters":{"type":"object","properties":{"issue":{"type":"string"}},"required":["issue"],"additionalProperties":false}}},
-        {"type":"function","function":{"name":"talks_by_topic","description":"Find talks by topics in the question","parameters":{"type":"object","properties":{"day":{"type":"string"},"after":{"type":"string"}},"required":[],"additionalProperties":false}}}
+        {"type":"function","function":{"name":"talks_by_topic","description":"Find talks by topics in the question","parameters":{"type":"object","properties":{"day":{"type":"string","description":"Conference day as ISO date: 2026-10-28 or 2026-10-29. Empty means any day."},"after":{"type":"string","description":"Earliest talk start time, 24h HH:MM, e.g. 10:00. Empty means any time."}},"required":[],"additionalProperties":false}}}
     ]);
     let response=reqwest::Client::new().post("https://api.openai.com/v1/chat/completions").bearer_auth(key).json(&json!({"model":model,"messages":[{"role":"system","content":"Choose exactly one graph tool if it can answer. Never answer directly."},{"role":"user","content":b.question}],"tools":tools,"tool_choice":"auto"})).send().await;
     let Ok(response)=response else{return (StatusCode::BAD_GATEWAY,Json(json!({"error":"OpenAI request failed"}))).into_response()};
@@ -59,10 +59,10 @@ async fn ask(State(s):State<Arc<AppState>>,Json(b):Json<AskBody>)->impl IntoResp
     if name.is_empty(){return Json(json!({"answer":"I can only answer what the graph can trace","quick_questions":["Which talks after lunch help with my open issues?","Who should I meet?"],"rows":[],"path":{"nodes":[],"edges":[]}})).into_response()}
     let args:Value=serde_json::from_str(call["function"]["arguments"].as_str().unwrap_or("{}")).unwrap_or(json!({}));
     let params=match name{
-        "talks_for_my_issues"=>json!({"person":person,"day":args["day"].as_str().unwrap_or(""),"after":args["after"].as_str().unwrap_or("")}),
+        "talks_for_my_issues"=>json!({"person":person,"day":normalize_day(args["day"].as_str().unwrap_or("")),"after":normalize_after(args["after"].as_str().unwrap_or(""))}),
         "people_to_meet"=>json!({"person":person}),
         "memory_recall"=>json!({"issue":args["issue"].as_str().unwrap_or("")}),
-        "talks_by_topic"=>{let hits=llm::classify(&[b.question.clone()]).await.unwrap_or_default().into_iter().next().unwrap_or_default();json!({"topics":hits.into_iter().map(|h|h.slug).collect::<Vec<_>>().join(","),"day":args["day"].as_str().unwrap_or(""),"after":args["after"].as_str().unwrap_or("")})},
+        "talks_by_topic"=>{let hits=llm::classify(&[b.question.clone()]).await.unwrap_or_default().into_iter().next().unwrap_or_default();json!({"topics":hits.into_iter().map(|h|h.slug).collect::<Vec<_>>().join(","),"day":normalize_day(args["day"].as_str().unwrap_or("")),"after":normalize_after(args["after"].as_str().unwrap_or(""))})},
         _=>return Json(json!({"answer":"I can only answer what the graph can trace","rows":[],"path":{"nodes":[],"edges":[]}})).into_response()
     };
     let (template,cypher)=match name{"talks_for_my_issues"=>("T1",T1_TALKS_FOR_MY_ISSUES),"people_to_meet"=>("T3",T3_PEOPLE_TO_MEET),"memory_recall"=>("T4",T4_MEMORY_RECALL),_=>("T6",T6_TALKS_BY_TOPIC)};

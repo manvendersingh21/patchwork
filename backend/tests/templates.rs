@@ -2,7 +2,9 @@ use patchwork::graph::{connect, run_template};
 use patchwork::templates::{T2_TALKS_FOR_ISSUE,T3_PEOPLE_TO_MEET,T4_MEMORY_RECALL,T5_ISSUES_FOR_ENCOUNTER,T6_TALKS_BY_TOPIC};
 
 async fn run(cypher: &str, template: &str, params: serde_json::Value) {
-    let mut g = connect("localhost", 6379, "patchwork").await.unwrap();
+    patchwork::config::load_dotenv();
+    let cfg = patchwork::config::Config::from_env();
+    let mut g = connect(&cfg.falkordb_host, cfg.falkordb_port, &cfg.graph_name).await.unwrap();
     let result = run_template(&mut g, template, cypher, params).await.unwrap();
     assert!(result.run_time_ms.is_some());
 }
