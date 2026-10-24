@@ -132,7 +132,29 @@ pub struct CreateShareArgs {
     pub redact: Vec<String>,
 }
 
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RevokeShareArgs {
+    /// Label of the share to revoke, as shown by list_shares.
+    pub label: String,
+}
+
+/// Full URL a teammate pastes into their MCP client.
+fn share_url(token: &str) -> String {
+    let base = match std::env::var("MCP_PUBLIC_URL") {
+        Ok(u) if !u.trim().is_empty() => u.trim().trim_end_matches('/').to_string(),
+        _ => format!("http://{}", std::env::var("MCP_HTTP_ADDR").unwrap_or_else(|_| "127.0.0.1:8765".into())),
+    };
+    format!("{base}/share/{token}/mcp")
+}
+
 impl PatchworkMcp {
+    fn owner_only(&self) -> Result<(), McpError> {
+        if self.policy.is_some() {
+            return Err(McpError::invalid_request("owner-only tool", None));
+        }
+        Ok(())
+    }
+
     pub async fn new(host: &str, port: u16, graph_name: &str) -> anyhow::Result<Self> {
         let g = connect(host, port, graph_name).await?;
         Ok(Self { graph: Arc::new(Mutex::new(g)), policy: None, tool_router: Self::tool_router() })
@@ -293,9 +315,25 @@ impl PatchworkMcp {
         text_result(&rows)
     }
 
-    #[tool(description = "Create a scoped share link for a teammate. Choose the tools they may call and the fields to hide (note, place). Returns mcp_path; prefix the server's public host to get the URL to send them. The link cannot call write tools or see hidden fields.")]
+    #[tool(description = "Create a scoped MCP link for a teammate. Before calling, ask the user which tools to share (talks_for_my_issues, talks_for_issue, people_to_meet, memory_recall, talks_by_topic, list_topics) and whether to hide the private fields note and place. Then show the user the returned `url` to paste into the teammate's MCP client, and list `hidden_tools` as \"hidden from teammates\". The link can never call write or owner tools.")]
     async fn create_share(&self, Parameters(a): Parameters<CreateShareArgs>) -> Result<CallToolResult, McpError> {
         self.create_share_impl(a).await
+    }
+
+    #[tool(description = "List the share links you created (label, tools, hidden fields, created_at, first 8 characters of the token), newest first. Owner only.")]
+    async fn list_shares(&self, Parameters(_a): Parameters<NoArgs>) -> Result<CallToolResult, McpError> {
+        self.owner_only()?;
+        let mut g = self.graph.lock().await;
+        let shares = crate::share::list(&mut g).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        text_result(&serde_json::json!({"shares": shares}))
+    }
+
+    #[tool(description = "Revoke every share link with this label; its URL stops working immediately. Returns how many were removed. Owner only.")]
+    async fn revoke_share(&self, Parameters(a): Parameters<RevokeShareArgs>) -> Result<CallToolResult, McpError> {
+        self.owner_only()?;
+        let mut g = self.graph.lock().await;
+        let removed = crate::share::revoke(&mut g, a.label.trim()).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        text_result(&serde_json::json!({"label": a.label.trim(), "removed": removed}))
     }
 
     #[tool(description = "Record a conversation: a hallway chat, or a LinkedIn DM thread read with the LinkedIn MCP's get_conversation (then set place='LinkedIn DM', source_url and met_linkedin). Your own model extracts who was met and which topics (slugs from list_topics) were discussed, and writes a one- or two-sentence summary into `note`; never paste the raw transcript. The server stores it and PatchWork's graph agents link it to open issues. No LLM runs on the server.")]
@@ -453,7 +491,7 @@ impl PatchworkMcp {
         let policy = crate::share::SharePolicy::new(&a.label, &a.tools, &a.redact).map_err(|e| McpError::invalid_params(e, None))?;
         let mut g = self.graph.lock().await;
         let token = crate::share::create(&mut g, &policy).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        text_result(&serde_json::json!({"label": policy.label, "token": token, "mcp_path": format!("/share/{token}/mcp"), "tools": policy.tools, "redact": policy.redact}))
+        text_result(&serde_json::json!({"label": policy.label, "token": token, "url": share_url(&token), "mcp_path": format!("/share/{token}/mcp"), "tools": policy.tools, "redact": policy.redact, "hidden_tools": crate::share::withheld(&policy)}))
     }
 }
 

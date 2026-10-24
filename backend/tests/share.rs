@@ -106,3 +106,26 @@ async fn share_redaction_removes_note_key_from_json_value() {
     cleanup("mcp-regtest-share-redact").await;
     outcome.unwrap();
 }
+
+#[tokio::test]
+#[ignore]
+async fn revoke_share_removes_it_and_token_stops_resolving() {
+    let label = "mcp-regtest-share-revoke";
+    let outcome = async {
+        let mut graph = open().await?;
+        let policy = SharePolicy::new(label, &["list_topics".into()], &[]).map_err(anyhow::Error::msg)?;
+        let token = share::create(&mut graph, &policy).await?;
+        ensure!(share::load(&mut graph, &token).await?.is_some(), "created share did not load");
+        let listed = share::list(&mut graph).await?;
+        let row = listed.iter().find(|r| r["label"] == label);
+        ensure!(row.is_some(), "list did not include the share");
+        ensure!(row.unwrap()["token_preview"].as_str().map(str::len) == Some(8), "token preview is not 8 chars");
+        let removed = share::revoke(&mut graph, label).await?;
+        ensure!(removed == 1, "revoke removed {removed}, expected 1");
+        ensure!(share::load(&mut graph, &token).await?.is_none(), "revoked share still loads");
+        Ok::<_, anyhow::Error>(())
+    }
+    .await;
+    cleanup(label).await;
+    outcome.unwrap();
+}

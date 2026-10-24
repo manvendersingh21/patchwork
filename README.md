@@ -107,6 +107,16 @@ PatchWork can remember LinkedIn DM threads the same way it remembers hallway cha
 
 Rules: import only threads you chose. Store a summary in `note`, never the raw transcript. **Never auto-send:** don't call the LinkedIn server's `send_message` or `connect_with_person` without explicit approval. Keep the LinkedIn server on stdio and local. Its HTTP mode has no auth and acts as your account, so never put it behind `make tunnel`. LinkedIn's User Agreement prohibits automated access, so use it sparingly. Demo fallback: `data/demo_linkedin_thread.json` (labeled demo persona).
 
+## Share with teammates
+
+The owner's `/mcp` can create read-only child MCP links from chat:
+
+1. Ask your MCP client something like "share the talk tools with team-berlin, hide my notes". It calls `create_share`, which asks which tools to share (`talks_for_my_issues`, `talks_for_issue`, `people_to_meet`, `memory_recall`, `talks_by_topic`, `list_topics`) and whether to hide `note` / `place`. The reply includes a pasteable `url` and the `hidden_tools` the teammate won't see.
+2. The teammate pastes that `url` (`<MCP_PUBLIC_URL>/share/<token>/mcp`) into their MCP client as a Streamable HTTP server. They see only the shared tools; write and owner tools (`log_*`, `create_share`, `list_shares`, `revoke_share`, ...) are rejected.
+3. "Which shares are live?" → `list_shares` (shows only the first 8 characters of each token). "Revoke team-berlin" → `revoke_share`, and the link returns 401 right away.
+
+Set `MCP_PUBLIC_URL` (e.g. your tunnel's `https://….trycloudflare.com`) so `url` uses the public host; otherwise it uses `http://$MCP_HTTP_ADDR`. When tunneled, `/mcp` must be protected with `MCP_BEARER_TOKEN`. Share URLs do not use that bearer: the token in the path is their credential, so treat a share URL like a password.
+
 ## MCP tools
 
 All tools run fixed, pre-verified Cypher templates on FalkorDB — arguments are typed values only, and no client-supplied Cypher is ever accepted. Template-backed tools return an envelope with `template`, `hops`, `run_time_ms` (FalkorDB's own internal execution time, not wall clock), `rows`, and the `path`.
@@ -124,6 +134,9 @@ All tools run fixed, pre-verified Cypher templates on FalkorDB — arguments are
 | `log_issue` | Logs an open problem the user describes as an issue on their personal notes repo, auto-classified under topics; the agents bridge it to talks and contacts within seconds. | `person`, `title`, `body`, `topics` (required) |
 | `recall_learnings` | Everything the person logged as learned, newest first, optionally filtered to one topic. | `person` (required); `topic` (optional) |
 | `talks_by_topic` | Talks about the given topics, with their path. Template T6. | `topics` (required, comma-separated slugs, e.g. `"mcp-auth,agentic-security"`); optional `day`, `after`, `before` (same format as above) |
+| `create_share` | Owner only. Creates a scoped, read-only child MCP link; returns `url`, `mcp_path`, `tools`, `redact`, and `hidden_tools`. | `label`, `tools` (required, from the sharable read tools); `redact` (optional: `note`, `place`) |
+| `list_shares` | Owner only. Live shares, newest first: label, tools, redact, created_at, 8-char `token_preview`. | none |
+| `revoke_share` | Owner only. Deletes the shares with that label; returns `removed`. Their URLs return 401 at once. | `label` (required) |
 
 ## Repository
 

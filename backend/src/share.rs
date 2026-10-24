@@ -92,6 +92,32 @@ pub async fn load(g: &mut AsyncGraph, token: &str) -> anyhow::Result<Option<Shar
     }))
 }
 
+/// Every share, newest first. Only the first 8 characters of each token are returned.
+pub async fn list(g: &mut AsyncGraph) -> anyhow::Result<Vec<Value>> {
+    let rows = query_rows(
+        g,
+        "MATCH (s:Share) RETURN s.label AS label, s.tools AS tools, s.redact AS redact, s.created_at AS created_at, substring(s.token, 0, 8) AS token_preview ORDER BY s.created_at DESC",
+        serde_json::json!({}),
+    )
+    .await?;
+    let split = |v: &Value| v.as_str().unwrap_or("").split(',').filter(|s| !s.is_empty()).map(str::to_string).collect::<Vec<_>>();
+    Ok(rows
+        .iter()
+        .map(|r| serde_json::json!({"label": r["label"], "tools": split(&r["tools"]), "redact": split(&r["redact"]), "created_at": r["created_at"], "token_preview": r["token_preview"]}))
+        .collect())
+}
+
+/// Delete every share with this label. Returns how many were removed; their URLs stop working at once.
+pub async fn revoke(g: &mut AsyncGraph, label: &str) -> anyhow::Result<i64> {
+    let rows = query_rows(g, "MATCH (s:Share {label: $label}) DELETE s RETURN count(s) AS removed", serde_json::json!({"label": label})).await?;
+    Ok(rows.first().and_then(|r| r["removed"].as_i64()).unwrap_or(0))
+}
+
+/// Sharable tools a policy did not get, so the owner can see what stays hidden.
+pub fn withheld(policy: &SharePolicy) -> Vec<&'static str> {
+    SHARABLE_TOOLS.iter().copied().filter(|t| !policy.allows(t)).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
