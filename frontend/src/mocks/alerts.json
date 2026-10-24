@@ -1,0 +1,26 @@
+[
+  {
+    "bridge_uid": "bridge:7c1e",
+    "issue": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
+    "contact": "Jordan Lee",
+    "note": "Met Jordan at the snack table. They scope agent tokens so agents can open PRs but never merge them.",
+    "place": "Snack table, Expo Hall",
+    "met_at": "2026-10-29T11:05:00-07:00",
+    "draft": "Hi Jordan — great meeting you at the snack table. Your model of scoping agent tokens so agents can open PRs but never merge them is exactly the fix for our per-identity OAuth scopes issue. Nick Taylor's talk on fine-grained authorization for hosted MCP servers (Thu 10:30, Demo Stage) covers the same ground — want to compare notes after?",
+    "path": {
+      "nodes": [
+        { "uid": "issue:manvendersingh21/deepcore-n1#1", "label": "Issue", "name": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)", "state": "LINKED" },
+        { "uid": "topic:mcp-auth", "label": "Topic", "name": "MCP Auth" },
+        { "uid": "enc:8f14e33", "label": "Encounter", "name": "Met Jordan at the snack table", "state": "LINKED" },
+        { "uid": "person:name:jordan-lee", "label": "Person", "name": "Jordan Lee" }
+      ],
+      "edges": [
+        { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "topic:mcp-auth", "confidence": 0.94, "evidence": "fine-grained per-identity OAuth scopes on hosted MCP tool calls" },
+        { "type": "DISCUSSED", "src_uid": "enc:8f14e33", "dst_uid": "topic:mcp-auth", "confidence": 0.89, "evidence": "scope agent tokens so agents can open PRs but never merge them" },
+        { "type": "MET", "src_uid": "enc:8f14e33", "dst_uid": "person:name:jordan-lee" }
+      ]
+    },
+    "cypher": "MATCH p = (i:Issue {uid: $issue})-[:ABOUT]->(t:Topic)<-[:DISCUSSED]-(e:Encounter)-[:MET]->(c:Person)\nRETURN p, c.uid AS contact_uid, c.name AS contact, e.note AS note,\n       e.place AS place, e.met_at AS met_at, t.name AS topic\nORDER BY met_at DESC\nLIMIT 3",
+    "run_time_ms": 0.87
+  }
+]

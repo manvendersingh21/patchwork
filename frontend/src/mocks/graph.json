@@ -1,0 +1,40 @@
+{
+  "nodes": [
+    { "uid": "person:gh:manvendersingh21", "label": "Person", "name": "Manvender Singh", "handle": "manvendersingh21", "kind": "self", "state": "SYNCED" },
+    { "uid": "repo:manvendersingh21/deepcore-n1", "label": "Repo", "name": "manvendersingh21/deepcore-n1" },
+    { "uid": "issue:manvendersingh21/deepcore-n1#1", "label": "Issue", "name": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)", "gh_state": "open", "state": "LINKED" },
+    { "uid": "issue:manvendersingh21/deepcore-n1#7", "label": "Issue", "name": "Remember hallway context across backend restarts", "gh_state": "open", "state": "LINKED" },
+    { "uid": "topic:mcp-auth", "label": "Topic", "name": "MCP Auth" },
+    { "uid": "topic:agentic-security", "label": "Topic", "name": "Agentic Security" },
+    { "uid": "topic:agent-memory", "label": "Topic", "name": "Agent Memory" },
+    { "uid": "talk:U26-09", "label": "Talk", "name": "Open pull requests, don't merge them: Fine-grained authorization for hosted MCP servers", "day": "2026-10-29", "start_time": "10:30", "end_time": "11:00", "room": "Demo Stage" },
+    { "uid": "talk:U26-04", "label": "Talk", "name": "How GitHub taught Copilot to remember and when to forget", "day": "2026-10-28", "start_time": "13:30", "end_time": "14:00", "room": "Universe Hall B" },
+    { "uid": "talk:U26-14", "label": "Talk", "name": "Disrupting supply chain attacks: A threat framework for GitHub Actions", "day": "2026-10-29", "start_time": "11:30", "end_time": "12:00", "room": "Demo Stage" },
+    { "uid": "person:name:nick-taylor", "label": "Person", "name": "Nick Taylor", "company": "Pomerium", "kind": "speaker" },
+    { "uid": "person:name:cooper-nederhood", "label": "Person", "name": "Cooper Nederhood", "company": "GitHub", "kind": "speaker" },
+    { "uid": "person:name:steve-glass", "label": "Person", "name": "Steve Glass", "company": "GitHub", "kind": "speaker" },
+    { "uid": "enc:8f14e33", "label": "Encounter", "name": "Met Jordan at the snack table", "note": "Met Jordan at the snack table. They scope agent tokens so agents can open PRs but never merge them.", "place": "Snack table, Expo Hall", "met_at": "2026-10-29T11:05:00-07:00", "state": "LINKED" },
+    { "uid": "person:name:jordan-lee", "label": "Person", "name": "Jordan Lee", "kind": "contact", "company": "Pomerium" }
+  ],
+  "edges": [
+    { "type": "MAINTAINS", "src_uid": "person:gh:manvendersingh21", "dst_uid": "repo:manvendersingh21/deepcore-n1" },
+    { "type": "HAS_ISSUE", "src_uid": "repo:manvendersingh21/deepcore-n1", "dst_uid": "issue:manvendersingh21/deepcore-n1#1" },
+    { "type": "HAS_ISSUE", "src_uid": "repo:manvendersingh21/deepcore-n1", "dst_uid": "issue:manvendersingh21/deepcore-n1#7" },
+    { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "topic:mcp-auth", "confidence": 0.94, "evidence": "fine-grained per-identity OAuth scopes on hosted MCP tool calls" },
+    { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "topic:agentic-security", "confidence": 0.78, "evidence": "block auto-merge of agent pull requests" },
+    { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#7", "dst_uid": "topic:agent-memory", "confidence": 0.91, "evidence": "hallway context across backend restarts" },
+    { "type": "ABOUT", "src_uid": "repo:manvendersingh21/deepcore-n1", "dst_uid": "topic:agentic-security", "confidence": 0.62, "evidence": "agent harness for scoped tool calls" },
+    { "type": "COVERS", "src_uid": "talk:U26-09", "dst_uid": "topic:mcp-auth", "confidence": 0.97 },
+    { "type": "COVERS", "src_uid": "talk:U26-09", "dst_uid": "topic:agentic-security", "confidence": 0.84 },
+    { "type": "COVERS", "src_uid": "talk:U26-04", "dst_uid": "topic:agent-memory", "confidence": 0.93 },
+    { "type": "COVERS", "src_uid": "talk:U26-14", "dst_uid": "topic:agentic-security", "confidence": 0.95 },
+    { "type": "SPEAKS_AT", "src_uid": "person:name:nick-taylor", "dst_uid": "talk:U26-09" },
+    { "type": "SPEAKS_AT", "src_uid": "person:name:cooper-nederhood", "dst_uid": "talk:U26-04" },
+    { "type": "SPEAKS_AT", "src_uid": "person:name:steve-glass", "dst_uid": "talk:U26-14" },
+    { "type": "LOGGED", "src_uid": "person:gh:manvendersingh21", "dst_uid": "enc:8f14e33" },
+    { "type": "MET", "src_uid": "enc:8f14e33", "dst_uid": "person:name:jordan-lee" },
+    { "type": "DISCUSSED", "src_uid": "enc:8f14e33", "dst_uid": "topic:mcp-auth", "confidence": 0.89, "evidence": "scope agent tokens so agents can open PRs but never merge them" },
+    { "type": "BRIDGE", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "talk:U26-09", "kind": "talk", "state": "ACTION_READY" },
+    { "type": "BRIDGE", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "person:name:jordan-lee", "kind": "contact", "state": "ACTION_READY" }
+  ]
+}

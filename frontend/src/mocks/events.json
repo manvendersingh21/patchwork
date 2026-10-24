@@ -1,0 +1,12 @@
+[
+  { "uid": "evt:3f1a0001", "ts": 1793210400000, "agent": "Cartographer", "action": "sync", "target": "manvendersingh21", "detail": "SYNC_REQUESTED → SYNCING" },
+  { "uid": "evt:3f1a0002", "ts": 1793210460000, "agent": "Cartographer", "action": "merge", "target": "repo:manvendersingh21/deepcore-n1", "detail": "+Repo +MAINTAINS" },
+  { "uid": "evt:3f1a0003", "ts": 1793210520000, "agent": "Cartographer", "action": "merge", "target": "Issue #1", "detail": "+Issue NEW" },
+  { "uid": "evt:3f1a0004", "ts": 1793210580000, "agent": "Cartographer", "action": "classify", "target": "Issue #1", "detail": "NEW → CLASSIFIED · mcp-auth 0.94" },
+  { "uid": "evt:3f1a0005", "ts": 1793210640000, "agent": "Pathfinder", "action": "link", "target": "Issue #1", "detail": "CLASSIFIED → LINKING" },
+  { "uid": "evt:3f1a0006", "ts": 1793210700000, "agent": "Pathfinder", "action": "bridge", "target": "talk:U26-09", "detail": "BRIDGE DISCOVERED · 5 hops" },
+  { "uid": "evt:3f1a0007", "ts": 1793210760000, "agent": "Concierge", "action": "draft", "target": "BRIDGE → talk:U26-09", "detail": "DISCOVERED → ACTION_READY" },
+  { "uid": "evt:3f1a0008", "ts": 1793210820000, "agent": "Cartographer", "action": "parse", "target": "enc:8f14e33", "detail": "NEW → PARSED · +MET Jordan Lee" },
+  { "uid": "evt:3f1a0009", "ts": 1793210880000, "agent": "Pathfinder", "action": "bridge", "target": "BRIDGE → Jordan Lee", "detail": "DISCOVERED · 3 hops" },
+  { "uid": "evt:3f1a0010", "ts": 1793210940000, "agent": "Concierge", "action": "draft", "target": "BRIDGE → Jordan Lee", "detail": "DRAFTING → ACTION_READY" }
+]

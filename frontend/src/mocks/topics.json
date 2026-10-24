@@ -1,0 +1,5 @@
+[
+  { "slug": "mcp-auth", "name": "MCP Auth" },
+  { "slug": "agentic-security", "name": "Agentic Security" },
+  { "slug": "agent-memory", "name": "Agent Memory" }
+]

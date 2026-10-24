@@ -1,0 +1,15 @@
+{
+  "falkordb": "ok",
+  "openai": "ok",
+  "github": "ok",
+  "counts": {
+    "Person": 5,
+    "Repo": 1,
+    "Issue": 2,
+    "Topic": 3,
+    "Talk": 3,
+    "Encounter": 1,
+    "AgentEvent": 47,
+    "BRIDGE": 2
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "template": "talks_for_my_issues",
+  "params": { "person": "person:gh:manvendersingh21", "day": "2026-10-29", "after": "09:00", "limit": 5 },
+  "cypher": "MATCH p = (me:Person {uid: $person})-[:MAINTAINS]->(r:Repo)-[:HAS_ISSUE]->(i:Issue {gh_state: 'open'})\n          -[:ABOUT]->(t:Topic)<-[:COVERS]-(k:Talk)<-[:SPEAKS_AT]-(s:Person)\nWHERE ($day IS NULL OR k.day = $day) AND ($after IS NULL OR k.start_time >= $after)\nRETURN p, i.title AS issue, t.name AS topic, k.title AS talk, k.day AS day,\n       k.start_time AS start_time, k.room AS room, s.name AS speaker\nORDER BY day, start_time\nLIMIT $limit",
+  "hops": 5,
+  "run_time_ms": 1.04,
+  "rows": [
+    {
+      "issue": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
+      "topic": "MCP Auth",
+      "talk": "Open pull requests, don't merge them: Fine-grained authorization for hosted MCP servers",
+      "day": "2026-10-29",
+      "start_time": "10:30",
+      "room": "Demo Stage",
+      "speaker": "Nick Taylor"
+    },
+    {
+      "issue": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
+      "topic": "Agentic Security",
+      "talk": "Disrupting supply chain attacks: A threat framework for GitHub Actions",
+      "day": "2026-10-29",
+      "start_time": "11:30",
+      "room": "Demo Stage",
+      "speaker": "Steve Glass"
+    }
+  ],
+  "path": {
+    "nodes": [
+      { "uid": "person:gh:manvendersingh21", "label": "Person", "name": "Manvender Singh", "state": "SYNCED" },
+      { "uid": "repo:manvendersingh21/deepcore-n1", "label": "Repo", "name": "manvendersingh21/deepcore-n1" },
+      { "uid": "issue:manvendersingh21/deepcore-n1#1", "label": "Issue", "name": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)", "state": "LINKED" },
+      { "uid": "topic:mcp-auth", "label": "Topic", "name": "MCP Auth" },
+      { "uid": "topic:agentic-security", "label": "Topic", "name": "Agentic Security" },
+      { "uid": "talk:U26-09", "label": "Talk", "name": "Open pull requests, don't merge them: Fine-grained authorization for hosted MCP servers" },
+      { "uid": "talk:U26-14", "label": "Talk", "name": "Disrupting supply chain attacks: A threat framework for GitHub Actions" },
+      { "uid": "person:name:nick-taylor", "label": "Person", "name": "Nick Taylor" },
+      { "uid": "person:name:steve-glass", "label": "Person", "name": "Steve Glass" }
+    ],
+    "edges": [
+      { "type": "MAINTAINS", "src_uid": "person:gh:manvendersingh21", "dst_uid": "repo:manvendersingh21/deepcore-n1" },
+      { "type": "HAS_ISSUE", "src_uid": "repo:manvendersingh21/deepcore-n1", "dst_uid": "issue:manvendersingh21/deepcore-n1#1" },
+      { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "topic:mcp-auth", "confidence": 0.94, "evidence": "fine-grained per-identity OAuth scopes on hosted MCP tool calls" },
+      { "type": "ABOUT", "src_uid": "issue:manvendersingh21/deepcore-n1#1", "dst_uid": "topic:agentic-security", "confidence": 0.78, "evidence": "block auto-merge of agent pull requests" },
+      { "type": "COVERS", "src_uid": "talk:U26-09", "dst_uid": "topic:mcp-auth", "confidence": 0.97 },
+      { "type": "COVERS", "src_uid": "talk:U26-14", "dst_uid": "topic:agentic-security", "confidence": 0.95 },
+      { "type": "SPEAKS_AT", "src_uid": "person:name:nick-taylor", "dst_uid": "talk:U26-09" },
+      { "type": "SPEAKS_AT", "src_uid": "person:name:steve-glass", "dst_uid": "talk:U26-14" }
+    ]
+  },
+  "answer": "Day 2 morning has two talks that line up with your open issue on per-identity OAuth scopes. At 10:30 on the Demo Stage, Nick Taylor speaks on \"Open pull requests, don't merge them\" via the MCP Auth topic, and at 11:30 Steve Glass covers \"Disrupting supply chain attacks\" via Agentic Security."
+}

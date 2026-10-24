@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@keyframes alert-in {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.alert-in {
+  animation: alert-in 0.35s ease-out;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
