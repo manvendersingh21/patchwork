@@ -9,8 +9,9 @@ use serde_json::Value;
 /// listed here, so a teammate can read the graph but not change it.
 pub const SHARABLE_TOOLS: &[&str] = &["talks_for_my_issues", "talks_for_issue", "people_to_meet", "memory_recall", "talks_by_topic", "list_topics"];
 
-/// Fields that never leave the owner's graph through a share.
-pub const REDACTED_FIELDS: &[&str] = &["note", "met_linkedin", "source_url", "handle", "place"];
+/// Fields a share can hide. These are the fields that appear in template results
+/// (`note` and `place` on encounters); anything not listed here is never redactable.
+pub const REDACTED_FIELDS: &[&str] = &["note", "place"];
 
 #[derive(Debug, Clone)]
 pub struct SharePolicy {
@@ -101,6 +102,7 @@ mod tests {
         assert!(SharePolicy::new("x", &["talks_for_issue".into()], &["secret".into()]).is_err());
         assert!(SharePolicy::new("", &["talks_for_issue".into()], &[]).is_err());
         assert!(SharePolicy::new("x", &["talks_for_issue".into()], &["note".into()]).is_ok());
+        assert!(SharePolicy::new("x", &["talks_for_issue".into()], &["met_linkedin".into()]).is_err());
     }
 
     #[test]

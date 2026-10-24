@@ -127,7 +127,7 @@ pub struct CreateShareArgs {
     pub label: String,
     /// Tools the share may call, from: talks_for_my_issues, talks_for_issue, people_to_meet, memory_recall, talks_by_topic, list_topics.
     pub tools: Vec<String>,
-    /// Fields to hide from results, from: note, met_linkedin, source_url, handle, place.
+    /// Fields to hide from results, from: note, place.
     #[serde(default)]
     pub redact: Vec<String>,
 }
@@ -293,7 +293,7 @@ impl PatchworkMcp {
         text_result(&rows)
     }
 
-    #[tool(description = "Create a scoped share link for a teammate. Choose the tools they may call and the fields to hide (note, met_linkedin, source_url, handle, place). Returns mcp_path; prefix the server's public host to get the URL to send them. The link cannot call write tools or see hidden fields.")]
+    #[tool(description = "Create a scoped share link for a teammate. Choose the tools they may call and the fields to hide (note, place). Returns mcp_path; prefix the server's public host to get the URL to send them. The link cannot call write tools or see hidden fields.")]
     async fn create_share(&self, Parameters(a): Parameters<CreateShareArgs>) -> Result<CallToolResult, McpError> {
         self.create_share_impl(a).await
     }
