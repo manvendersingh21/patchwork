@@ -70,6 +70,40 @@ pub struct LogEncounterArgs {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
+pub struct LogLearningArgs {
+    /// Who learned it: their GitHub handle (e.g. "octocat") or plain name (e.g. "Ada Lovelace").
+    pub person: String,
+    /// The lesson itself, one or two sentences the user wants to keep.
+    pub learned: String,
+    /// Topic slugs the lesson is about, chosen from list_topics. Unknown slugs are rejected.
+    pub topics: Vec<String>,
+    /// Where it came from, e.g. "photo of a slide", "hallway chat".
+    #[serde(default)]
+    pub source: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct LogIssueArgs {
+    /// Whose notes repo this lands on: GitHub handle or plain name.
+    pub person: String,
+    /// One-line summary of the open problem or question.
+    pub title: String,
+    /// The full question or problem as the user described it.
+    pub body: String,
+    /// Topic slugs from list_topics. Unknown slugs are rejected.
+    pub topics: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RecallLearningsArgs {
+    /// Who to recall for: GitHub handle or plain name.
+    pub person: String,
+    /// Optional topic slug from list_topics; empty for all topics.
+    #[serde(default)]
+    pub topic: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct NoArgs {}
 
 #[derive(Clone)]
@@ -98,6 +132,30 @@ impl PatchworkMcp {
 fn text_result<T: serde::Serialize>(v: &T) -> Result<CallToolResult, McpError> {
     let text = serde_json::to_string_pretty(v).map_err(|e| McpError::internal_error(e.to_string(), None))?;
     Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
+}
+
+/// Resolve the caller's `person` argument (GitHub handle, plain name, or an existing
+/// person: uid) to the Person uid convention used by log_encounter and the templates.
+fn person_uid(person: &str) -> String {
+    let p = person.trim().trim_start_matches('@');
+    if p.starts_with("person:") { return p.to_string(); }
+    if p.split_whitespace().count() > 1 {
+        format!("person:name:{}", p.to_lowercase().split_whitespace().collect::<Vec<_>>().join("-"))
+    } else {
+        format!("person:gh:{p}")
+    }
+}
+
+/// Topic slugs are a closed set; reject anything list_topics would not show (as log_encounter does).
+async fn require_topics(g: &mut AsyncGraph, topics: &[String]) -> Result<(), McpError> {
+    let known = query_rows(g, "MATCH (t:Topic) RETURN t.slug AS slug", serde_json::json!({}))
+        .await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+    let known: std::collections::HashSet<String> = known.iter().filter_map(|r| r["slug"].as_str().map(str::to_string)).collect();
+    let unknown: Vec<&String> = topics.iter().filter(|t| !known.contains(t.as_str())).collect();
+    if topics.is_empty() || !unknown.is_empty() {
+        return Err(McpError::invalid_params(format!("topics must be non-empty slugs from list_topics; unknown: {unknown:?}"), None));
+    }
+    Ok(())
 }
 
 #[tool_router]
@@ -162,6 +220,86 @@ impl PatchworkMcp {
         // Parsed by the client, so hand straight to Pathfinder (PARSED); the server makes no LLM call.
         write_query(&mut g, "MATCH (e:Encounter {uid: $uid}) SET e.state = 'PARSED'", serde_json::json!({"uid": uid})).await.map_err(err)?;
         text_result(&serde_json::json!({"encounter_uid": uid, "contact_uid": contact, "state": "PARSED"}))
+    }
+
+    #[tool(description = "Log something the user learned at the conference. Works from a sentence the user says OR a photo they share (slide, whiteboard, poster, badge, notes): read the photo, extract the key lesson into `learned`, pick topic slugs with list_topics, and describe where it came from in `source`.")]
+    async fn log_learning(&self, Parameters(a): Parameters<LogLearningArgs>) -> Result<CallToolResult, McpError> {
+        if a.person.trim().is_empty() || a.learned.trim().is_empty() {
+            return Err(McpError::invalid_params("person and learned are required", None));
+        }
+        let mut g = self.graph.lock().await;
+        require_topics(&mut g, &a.topics).await?;
+        let uid = format!("learning:{}", uuid::Uuid::new_v4());
+        let person = person_uid(&a.person);
+        let handle = if person.starts_with("person:gh:") { a.person.trim().trim_start_matches('@').to_string() } else { String::new() };
+        let err = |e: anyhow::Error| McpError::internal_error(e.to_string(), None);
+        write_query(&mut g, "MERGE (p:Person {uid: $person}) ON CREATE SET p.name = $name, p.handle = $handle, p.kind = 'contact', p.demo = false",
+            serde_json::json!({"person": person, "name": a.person.trim(), "handle": handle})).await.map_err(err)?;
+        write_query(&mut g, "MATCH (p:Person {uid: $person}) CREATE (l:Learning {uid: $uid}) SET l.text = $learned, l.source = $source, l.learned_at = $now, l.state = 'LOGGED' MERGE (p)-[:LOGGED]->(l)",
+            serde_json::json!({"person": person, "uid": uid, "learned": a.learned, "source": a.source, "now": chrono::Utc::now().to_rfc3339()})).await.map_err(err)?;
+        for t in &a.topics {
+            write_query(&mut g, "MATCH (l:Learning {uid: $uid}), (t:Topic {slug: $slug}) MERGE (l)-[:ABOUT]->(t)",
+                serde_json::json!({"uid": uid, "slug": t})).await.map_err(err)?;
+        }
+        // Params are string-typed, so fan the topic IN-list out per slug and merge here.
+        let mut talks = Vec::new();
+        for t in &a.topics {
+            talks.extend(query_rows(&mut g, "MATCH (t:Topic {slug: $slug})<-[:COVERS]-(k:Talk)<-[:SPEAKS_AT]-(s:Person) RETURN k.title AS talk, k.day AS day, k.start_time AS start_time, k.room AS room, s.name AS speaker",
+                serde_json::json!({"slug": t})).await.map_err(|e| McpError::internal_error(e.to_string(), None))?);
+        }
+        talks.sort_by_key(|r| (r["day"].as_str().unwrap_or("").to_string(), r["start_time"].as_str().unwrap_or("").to_string()));
+        talks.dedup_by(|x, y| x == y);
+        talks.truncate(5);
+        text_result(&serde_json::json!({"learning_uid": uid, "person_uid": person, "state": "LOGGED", "topics": a.topics, "related_talks": talks}))
+    }
+
+    #[tool(description = "Log an open problem or question the user describes (verbally or from a photo of notes/a slide). It becomes an open issue on their personal notes repo in the graph, auto-classified under the given topics; the agents then find talks and people that address it.")]
+    async fn log_issue(&self, Parameters(a): Parameters<LogIssueArgs>) -> Result<CallToolResult, McpError> {
+        if a.person.trim().is_empty() || a.title.trim().is_empty() || a.body.trim().is_empty() {
+            return Err(McpError::invalid_params("person, title and body are required", None));
+        }
+        let mut g = self.graph.lock().await;
+        require_topics(&mut g, &a.topics).await?;
+        let who = a.person.trim().trim_start_matches('@');
+        let person = person_uid(&a.person);
+        let handle = if person.starts_with("person:gh:") { who.to_string() } else { String::new() };
+        let repo = format!("repo:notes/{who}");
+        let issue = format!("issue:notes/{who}#{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
+        let err = |e: anyhow::Error| McpError::internal_error(e.to_string(), None);
+        // MERGE the notes repo so T1 (Person→Repo→Issue→Topic→Talk) reaches issues logged here.
+        write_query(&mut g, "MERGE (p:Person {uid: $person}) ON CREATE SET p.name = $name, p.handle = $handle, p.kind = 'contact', p.demo = false MERGE (r:Repo {uid: $repo}) ON CREATE SET r.full_name = $full_name MERGE (p)-[:MAINTAINS]->(r)",
+            serde_json::json!({"person": person, "name": a.person.trim(), "handle": handle, "repo": repo, "full_name": format!("{who}'s conference notes")})).await.map_err(err)?;
+        // state='CLASSIFIED' hands the issue straight to Pathfinder (T2 talks, T4 contacts) within seconds.
+        write_query(&mut g, "MATCH (r:Repo {uid: $repo}) CREATE (i:Issue {uid: $issue}) SET i.title = $title, i.body = $body, i.gh_state = 'open', i.state = 'CLASSIFIED', i.created_at = $now MERGE (r)-[:HAS_ISSUE]->(i)",
+            serde_json::json!({"repo": repo, "issue": issue, "title": a.title, "body": a.body, "now": chrono::Utc::now().to_rfc3339()})).await.map_err(err)?;
+        for t in &a.topics {
+            write_query(&mut g, "MATCH (i:Issue {uid: $issue}), (t:Topic {slug: $slug}) MERGE (i)-[:ABOUT]->(t)",
+                serde_json::json!({"issue": issue, "slug": t})).await.map_err(err)?;
+        }
+        text_result(&serde_json::json!({"issue_uid": issue, "repo_uid": repo, "person_uid": person, "state": "CLASSIFIED", "next": "Pathfinder claims CLASSIFIED issues within seconds and bridges them to talks (T2) and useful contacts (T4); watch check_alerts."}))
+    }
+
+    #[tool(description = "Recall what the user logged as learned, newest first, optionally filtered to one topic slug from list_topics (empty = all). Summarize these lessons back to the user.")]
+    async fn recall_learnings(&self, Parameters(a): Parameters<RecallLearningsArgs>) -> Result<CallToolResult, McpError> {
+        let mut g = self.graph.lock().await;
+        let person = person_uid(&a.person);
+        // Results come back column-typed (no arrays), so fan out one row per learning×topic and group here.
+        let rows = query_rows(&mut g, "MATCH (p:Person {uid: $person})-[:LOGGED]->(l:Learning) OPTIONAL MATCH (l)-[:ABOUT]->(t:Topic) WHERE ($topic = '' OR t.slug = $topic) RETURN l.uid AS uid, l.text AS text, l.source AS source, l.learned_at AS learned_at, t.slug AS topic ORDER BY l.learned_at DESC",
+            serde_json::json!({"person": person, "topic": a.topic.trim()})).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        let mut learnings: Vec<serde_json::Value> = Vec::new();
+        let mut seen: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        for r in rows {
+            let uid = r["uid"].as_str().unwrap_or_default().to_string();
+            let slug = r["topic"].as_str().unwrap_or_default().to_string();
+            if let Some(&i) = seen.get(&uid) {
+                if !slug.is_empty() { if let Some(ts) = learnings[i]["topics"].as_array_mut() { ts.push(serde_json::Value::String(slug)); } }
+            } else if learnings.len() < 20 {
+                let topics = if slug.is_empty() { Vec::new() } else { vec![serde_json::Value::String(slug)] };
+                seen.insert(uid.clone(), learnings.len());
+                learnings.push(serde_json::json!({"uid": uid, "text": r["text"], "source": r["source"], "learned_at": r["learned_at"], "topics": topics}));
+            }
+        }
+        text_result(&serde_json::json!({"person_uid": person, "learnings": learnings}))
     }
 
     #[tool(description = "Bridges PatchWork found between your open issues and people you met (newest first). Draft any follow-up message with your own model.")]
