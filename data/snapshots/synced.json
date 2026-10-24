@@ -1,0 +1,1097 @@
+{
+  "nodes": [
+    {
+      "uid": "issue:manvendersingh21/deepcore-n1#1",
+      "labels": [
+        "Issue"
+      ],
+      "properties": {
+        "demo": false,
+        "gh_state": "open",
+        "number": "1",
+        "state": "LINKED",
+        "title": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
+        "uid": "issue:manvendersingh21/deepcore-n1#1",
+        "url": "https://github.com/manvendersingh21/deepcore-n1/issues/1"
+      }
+    },
+    {
+      "uid": "issue:manvendersingh21/deepcore-n1#2",
+      "labels": [
+        "Issue"
+      ],
+      "properties": {
+        "demo": false,
+        "gh_state": "open",
+        "number": "2",
+        "state": "LINKED",
+        "title": "Race condition & hallucinated root-cause in multi-agent state handoff during 2am incident triage",
+        "uid": "issue:manvendersingh21/deepcore-n1#2",
+        "url": "https://github.com/manvendersingh21/deepcore-n1/issues/2"
+      }
+    },
+    {
+      "uid": "issue:manvendersingh21/deepcore-n1#3",
+      "labels": [
+        "Issue"
+      ],
+      "properties": {
+        "demo": false,
+        "gh_state": "open",
+        "number": "3",
+        "state": "LINKED",
+        "title": "Lock down GitHub Actions runner workflow permissions and npm dependency supply-chain checks",
+        "uid": "issue:manvendersingh21/deepcore-n1#3",
+        "url": "https://github.com/manvendersingh21/deepcore-n1/issues/3"
+      }
+    },
+    {
+      "uid": "issue:manvendersingh21/deepcore-n1#4",
+      "labels": [
+        "Issue"
+      ],
+      "properties": {
+        "demo": false,
+        "gh_state": "open",
+        "number": "4",
+        "state": "LINKED",
+        "title": "Standardize shared agent memory & context infrastructure across local and cloud runtimes",
+        "uid": "issue:manvendersingh21/deepcore-n1#4",
+        "url": "https://github.com/manvendersingh21/deepcore-n1/issues/4"
+      }
+    },
+    {
+      "uid": "person:gh:manvendersingh21",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "claimed_at": "",
+        "claimed_by": "",
+        "demo": false,
+        "handle": "manvendersingh21",
+        "kind": "self",
+        "name": "manvendersingh21",
+        "state": "SYNCED",
+        "uid": "person:gh:manvendersingh21"
+      }
+    },
+    {
+      "uid": "person:name:achin-gupta",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Intuit",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Achin Gupta",
+        "uid": "person:name:achin-gupta"
+      }
+    },
+    {
+      "uid": "person:name:cara-phillips",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Anthropic",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Cara Phillips",
+        "uid": "person:name:cara-phillips"
+      }
+    },
+    {
+      "uid": "person:name:christopher-harrison",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Christopher Harrison",
+        "uid": "person:name:christopher-harrison"
+      }
+    },
+    {
+      "uid": "person:name:divya-mahajan",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Amazon",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Divya Mahajan",
+        "uid": "person:name:divya-mahajan"
+      }
+    },
+    {
+      "uid": "person:name:franck-nijhof",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Open Home Foundation",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Franck Nijhof",
+        "uid": "person:name:franck-nijhof"
+      }
+    },
+    {
+      "uid": "person:name:greg-ose",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Greg Ose",
+        "uid": "person:name:greg-ose"
+      }
+    },
+    {
+      "uid": "person:name:jared-hatfield",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "UPS",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Jared Hatfield",
+        "uid": "person:name:jared-hatfield"
+      }
+    },
+    {
+      "uid": "person:name:jeff-an",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Momentic",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Jeff An",
+        "uid": "person:name:jeff-an"
+      }
+    },
+    {
+      "uid": "person:name:karen-li",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Karen Li",
+        "uid": "person:name:karen-li"
+      }
+    },
+    {
+      "uid": "person:name:kate-catlin",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Kate Catlin",
+        "uid": "person:name:kate-catlin"
+      }
+    },
+    {
+      "uid": "person:name:leo-balter",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Leo Balter",
+        "uid": "person:name:leo-balter"
+      }
+    },
+    {
+      "uid": "person:name:nick-taylor",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "Pomerium",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Nick Taylor",
+        "uid": "person:name:nick-taylor"
+      }
+    },
+    {
+      "uid": "person:name:rohan-varma",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "OpenAI",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Rohan Varma",
+        "uid": "person:name:rohan-varma"
+      }
+    },
+    {
+      "uid": "person:name:steve-glass",
+      "labels": [
+        "Person"
+      ],
+      "properties": {
+        "company": "GitHub",
+        "demo": false,
+        "kind": "speaker",
+        "name": "Steve Glass",
+        "uid": "person:name:steve-glass"
+      }
+    },
+    {
+      "uid": "repo:manvendersingh21/CraftifAIHackathon_CRA002",
+      "labels": [
+        "Repo"
+      ],
+      "properties": {
+        "description": "Workplace Safety Sentinel - real-time PPE/hard-hat compliance on the edge (PipeGen hackathon)",
+        "full_name": "manvendersingh21/CraftifAIHackathon_CRA002",
+        "stars": "0",
+        "uid": "repo:manvendersingh21/CraftifAIHackathon_CRA002",
+        "url": "https://github.com/manvendersingh21/CraftifAIHackathon_CRA002"
+      }
+    },
+    {
+      "uid": "repo:manvendersingh21/aegis-mcp",
+      "labels": [
+        "Repo"
+      ],
+      "properties": {
+        "description": "",
+        "full_name": "manvendersingh21/aegis-mcp",
+        "stars": "0",
+        "uid": "repo:manvendersingh21/aegis-mcp",
+        "url": "https://github.com/manvendersingh21/aegis-mcp"
+      }
+    },
+    {
+      "uid": "repo:manvendersingh21/deepcore-n1",
+      "labels": [
+        "Repo"
+      ],
+      "properties": {
+        "demo": false,
+        "description": "Self-improving robotic-excavation sandbox: locked MuJoCo verifier, recorded replays, mining-fleet demo (simulation only)",
+        "full_name": "manvendersingh21/deepcore-n1",
+        "stars": "0",
+        "uid": "repo:manvendersingh21/deepcore-n1",
+        "url": "https://github.com/manvendersingh21/deepcore-n1"
+      }
+    },
+    {
+      "uid": "repo:obra/superpowers",
+      "labels": [
+        "Repo"
+      ],
+      "properties": {
+        "full_name": "obra/superpowers",
+        "uid": "repo:obra/superpowers",
+        "url": "https://github.com/obra/superpowers"
+      }
+    },
+    {
+      "uid": "talk:U26-01",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-28",
+        "end_time": "09:45",
+        "room": "Main Stage (Festival Pavilion, Fort Mason)",
+        "start_time": "09:00",
+        "title": "Opening Keynote: GitHub Universe 2026",
+        "uid": "talk:U26-01"
+      }
+    },
+    {
+      "uid": "talk:U26-02",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-28",
+        "end_time": "12:10",
+        "room": "Breakout Stage 1 (Gateway Pavilion)",
+        "start_time": "11:30",
+        "title": "Building AI fluency at UPS",
+        "uid": "talk:U26-02"
+      }
+    },
+    {
+      "uid": "talk:U26-03",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-28",
+        "end_time": "14:25",
+        "room": "Demo Stage (Festival Pavilion)",
+        "start_time": "14:10",
+        "title": "Code is the easy part: Building Home Assistant in the open",
+        "uid": "talk:U26-03"
+      }
+    },
+    {
+      "uid": "talk:U26-04",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-28",
+        "end_time": "15:00",
+        "room": "Breakout Stage 2 (Cowell Theater)",
+        "start_time": "14:30",
+        "title": "Disrupting supply chain attacks: A threat framework for GitHub Actions",
+        "uid": "talk:U26-04"
+      }
+    },
+    {
+      "uid": "talk:U26-05",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-28",
+        "end_time": "17:10",
+        "room": "Breakout Stage 1 (Gateway Pavilion)",
+        "start_time": "16:30",
+        "title": "What happens behind the scenes when you run npm install",
+        "uid": "talk:U26-05"
+      }
+    },
+    {
+      "uid": "talk:U26-06",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-29",
+        "end_time": "09:30",
+        "room": "Main Stage (Festival Pavilion, Fort Mason)",
+        "start_time": "09:00",
+        "title": "The view from the labs: What's next for AI-assisted development",
+        "uid": "talk:U26-06"
+      }
+    },
+    {
+      "uid": "talk:U26-07",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-29",
+        "end_time": "09:40",
+        "room": "Breakout Stage 2 (Cowell Theater)",
+        "start_time": "09:00",
+        "title": "Beyond pass or fail: How agents verify AI-generated code",
+        "uid": "talk:U26-07"
+      }
+    },
+    {
+      "uid": "talk:U26-08",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-29",
+        "end_time": "09:45",
+        "room": "Demo Stage (Festival Pavilion)",
+        "start_time": "09:30",
+        "title": "The 2 a.m. RCA agent: Architecting AI that investigates, not hallucinates",
+        "uid": "talk:U26-08"
+      }
+    },
+    {
+      "uid": "talk:U26-09",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-29",
+        "end_time": "10:45",
+        "room": "Demo Stage (Festival Pavilion)",
+        "start_time": "10:30",
+        "title": "Open pull requests, don't merge them: Fine-grained authorization for hosted MCP servers",
+        "uid": "talk:U26-09"
+      }
+    },
+    {
+      "uid": "talk:U26-10",
+      "labels": [
+        "Talk"
+      ],
+      "properties": {
+        "day": "2026-10-29",
+        "end_time": "13:40",
+        "room": "Breakout Stage 1 (Gateway Pavilion)",
+        "start_time": "13:00",
+        "title": "Treat your AI context as infrastructure",
+        "uid": "talk:U26-10"
+      }
+    },
+    {
+      "uid": "topic:agent-memory",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Persisting and recalling agent memory across sessions",
+        "name": "Agent Memory",
+        "slug": "agent-memory",
+        "uid": "topic:agent-memory"
+      }
+    },
+    {
+      "uid": "topic:agentic-security",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Security risks and controls for autonomous agents",
+        "name": "Agentic Security",
+        "slug": "agentic-security",
+        "uid": "topic:agentic-security"
+      }
+    },
+    {
+      "uid": "topic:agentic-workflows",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Agents doing multi-step work in dev workflows",
+        "name": "Agentic Workflows",
+        "slug": "agentic-workflows",
+        "uid": "topic:agentic-workflows"
+      }
+    },
+    {
+      "uid": "topic:ai-assisted-testing",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Using AI to write and run tests",
+        "name": "AI-Assisted Testing",
+        "slug": "ai-assisted-testing",
+        "uid": "topic:ai-assisted-testing"
+      }
+    },
+    {
+      "uid": "topic:ai-context",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Context, instructions and state given to AI agents",
+        "name": "AI Context",
+        "slug": "ai-context",
+        "uid": "topic:ai-context"
+      }
+    },
+    {
+      "uid": "topic:ai-operations",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Running AI systems in production",
+        "name": "AI Operations",
+        "slug": "ai-operations",
+        "uid": "topic:ai-operations"
+      }
+    },
+    {
+      "uid": "topic:cicd",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Continuous integration and delivery pipelines",
+        "name": "CI/CD",
+        "slug": "cicd",
+        "uid": "topic:cicd"
+      }
+    },
+    {
+      "uid": "topic:community-governance",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "How open source communities make decisions",
+        "name": "Community Governance",
+        "slug": "community-governance",
+        "uid": "topic:community-governance"
+      }
+    },
+    {
+      "uid": "topic:copilot",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "GitHub Copilot products and usage",
+        "name": "Copilot",
+        "slug": "copilot",
+        "uid": "topic:copilot"
+      }
+    },
+    {
+      "uid": "topic:dependencies",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Managing and resolving package dependencies",
+        "name": "Dependencies",
+        "slug": "dependencies",
+        "uid": "topic:dependencies"
+      }
+    },
+    {
+      "uid": "topic:deterministic-verification",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Checking agent output with deterministic code and tests",
+        "name": "Deterministic Verification",
+        "slug": "deterministic-verification",
+        "uid": "topic:deterministic-verification"
+      }
+    },
+    {
+      "uid": "topic:developer-experience",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Tooling and workflows that make developers faster",
+        "name": "Developer Experience",
+        "slug": "developer-experience",
+        "uid": "topic:developer-experience"
+      }
+    },
+    {
+      "uid": "topic:enterprise-ai-adoption",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Rolling out AI tools across large organizations",
+        "name": "Enterprise AI Adoption",
+        "slug": "enterprise-ai-adoption",
+        "uid": "topic:enterprise-ai-adoption"
+      }
+    },
+    {
+      "uid": "topic:frontier-models",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Latest frontier model capabilities for developers",
+        "name": "Frontier Models",
+        "slug": "frontier-models",
+        "uid": "topic:frontier-models"
+      }
+    },
+    {
+      "uid": "topic:github-actions",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "GitHub Actions workflows and runners",
+        "name": "GitHub Actions",
+        "slug": "github-actions",
+        "uid": "topic:github-actions"
+      }
+    },
+    {
+      "uid": "topic:mcp-auth",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Authorization for Model Context Protocol servers and tool calls",
+        "name": "MCP Auth",
+        "slug": "mcp-auth",
+        "uid": "topic:mcp-auth"
+      }
+    },
+    {
+      "uid": "topic:oauth",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "OAuth scopes and token-based authorization",
+        "name": "OAuth",
+        "slug": "oauth",
+        "uid": "topic:oauth"
+      }
+    },
+    {
+      "uid": "topic:open-source",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Building and running open source projects",
+        "name": "Open Source",
+        "slug": "open-source",
+        "uid": "topic:open-source"
+      }
+    },
+    {
+      "uid": "topic:package-management",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Package managers and registries",
+        "name": "Package Management",
+        "slug": "package-management",
+        "uid": "topic:package-management"
+      }
+    },
+    {
+      "uid": "topic:platform-engineering",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Internal developer platforms and shared infrastructure",
+        "name": "Platform Engineering",
+        "slug": "platform-engineering",
+        "uid": "topic:platform-engineering"
+      }
+    },
+    {
+      "uid": "topic:rca-agent",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Agents that investigate incidents and find root causes",
+        "name": "RCA Agent",
+        "slug": "rca-agent",
+        "uid": "topic:rca-agent"
+      }
+    },
+    {
+      "uid": "topic:supply-chain-security",
+      "labels": [
+        "Topic"
+      ],
+      "properties": {
+        "description": "Attacks and defenses across software dependencies and build pipelines",
+        "name": "Supply Chain Security",
+        "slug": "supply-chain-security",
+        "uid": "topic:supply-chain-security"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#1",
+      "dst_uid": "topic:agentic-security",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#1",
+      "dst_uid": "topic:mcp-auth",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#1",
+      "dst_uid": "topic:oauth",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#2",
+      "dst_uid": "topic:deterministic-verification",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#2",
+      "dst_uid": "topic:rca-agent",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#3",
+      "dst_uid": "topic:cicd",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#3",
+      "dst_uid": "topic:github-actions",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#3",
+      "dst_uid": "topic:supply-chain-security",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#4",
+      "dst_uid": "topic:agent-memory",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#4",
+      "dst_uid": "topic:ai-context",
+      "properties": {}
+    },
+    {
+      "type": "ABOUT",
+      "src_uid": "issue:manvendersingh21/deepcore-n1#4",
+      "dst_uid": "topic:platform-engineering",
+      "properties": {}
+    },
+    {
+      "type": "MAINTAINS",
+      "src_uid": "person:gh:manvendersingh21",
+      "dst_uid": "repo:manvendersingh21/CraftifAIHackathon_CRA002",
+      "properties": {}
+    },
+    {
+      "type": "MAINTAINS",
+      "src_uid": "person:gh:manvendersingh21",
+      "dst_uid": "repo:manvendersingh21/aegis-mcp",
+      "properties": {}
+    },
+    {
+      "type": "MAINTAINS",
+      "src_uid": "person:gh:manvendersingh21",
+      "dst_uid": "repo:manvendersingh21/deepcore-n1",
+      "properties": {}
+    },
+    {
+      "type": "TRACKS",
+      "src_uid": "person:gh:manvendersingh21",
+      "dst_uid": "repo:obra/superpowers",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:achin-gupta",
+      "dst_uid": "talk:U26-08",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:cara-phillips",
+      "dst_uid": "talk:U26-06",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:christopher-harrison",
+      "dst_uid": "talk:U26-10",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:divya-mahajan",
+      "dst_uid": "talk:U26-08",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:franck-nijhof",
+      "dst_uid": "talk:U26-03",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:greg-ose",
+      "dst_uid": "talk:U26-04",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:jared-hatfield",
+      "dst_uid": "talk:U26-02",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:jeff-an",
+      "dst_uid": "talk:U26-07",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:karen-li",
+      "dst_uid": "talk:U26-05",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:kate-catlin",
+      "dst_uid": "talk:U26-06",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:leo-balter",
+      "dst_uid": "talk:U26-05",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:nick-taylor",
+      "dst_uid": "talk:U26-09",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:rohan-varma",
+      "dst_uid": "talk:U26-06",
+      "properties": {}
+    },
+    {
+      "type": "SPEAKS_AT",
+      "src_uid": "person:name:steve-glass",
+      "dst_uid": "talk:U26-04",
+      "properties": {}
+    },
+    {
+      "type": "HAS_ISSUE",
+      "src_uid": "repo:manvendersingh21/deepcore-n1",
+      "dst_uid": "issue:manvendersingh21/deepcore-n1#1",
+      "properties": {}
+    },
+    {
+      "type": "HAS_ISSUE",
+      "src_uid": "repo:manvendersingh21/deepcore-n1",
+      "dst_uid": "issue:manvendersingh21/deepcore-n1#2",
+      "properties": {}
+    },
+    {
+      "type": "HAS_ISSUE",
+      "src_uid": "repo:manvendersingh21/deepcore-n1",
+      "dst_uid": "issue:manvendersingh21/deepcore-n1#3",
+      "properties": {}
+    },
+    {
+      "type": "HAS_ISSUE",
+      "src_uid": "repo:manvendersingh21/deepcore-n1",
+      "dst_uid": "issue:manvendersingh21/deepcore-n1#4",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-01",
+      "dst_uid": "topic:agentic-workflows",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-01",
+      "dst_uid": "topic:copilot",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-01",
+      "dst_uid": "topic:platform-engineering",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-02",
+      "dst_uid": "topic:copilot",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-02",
+      "dst_uid": "topic:developer-experience",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-02",
+      "dst_uid": "topic:enterprise-ai-adoption",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-03",
+      "dst_uid": "topic:cicd",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-03",
+      "dst_uid": "topic:community-governance",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-03",
+      "dst_uid": "topic:open-source",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-04",
+      "dst_uid": "topic:cicd",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-04",
+      "dst_uid": "topic:github-actions",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-04",
+      "dst_uid": "topic:supply-chain-security",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-05",
+      "dst_uid": "topic:dependencies",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-05",
+      "dst_uid": "topic:package-management",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-05",
+      "dst_uid": "topic:supply-chain-security",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-06",
+      "dst_uid": "topic:agentic-workflows",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-06",
+      "dst_uid": "topic:ai-context",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-06",
+      "dst_uid": "topic:frontier-models",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-07",
+      "dst_uid": "topic:agentic-security",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-07",
+      "dst_uid": "topic:ai-assisted-testing",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-07",
+      "dst_uid": "topic:deterministic-verification",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-08",
+      "dst_uid": "topic:ai-operations",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-08",
+      "dst_uid": "topic:deterministic-verification",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-08",
+      "dst_uid": "topic:rca-agent",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-09",
+      "dst_uid": "topic:agentic-security",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-09",
+      "dst_uid": "topic:mcp-auth",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-09",
+      "dst_uid": "topic:oauth",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-10",
+      "dst_uid": "topic:agent-memory",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-10",
+      "dst_uid": "topic:ai-context",
+      "properties": {}
+    },
+    {
+      "type": "COVERS",
+      "src_uid": "talk:U26-10",
+      "dst_uid": "topic:platform-engineering",
+      "properties": {}
+    }
+  ]
+}
