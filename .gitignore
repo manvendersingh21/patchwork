@@ -6,3 +6,5 @@ __pycache__/
 data/cache/
 target-backend/
 target-graph/
+frontend/dist/
+frontend/node_modules/
