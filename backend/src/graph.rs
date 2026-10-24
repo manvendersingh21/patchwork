@@ -122,3 +122,24 @@ fn falkor_to_json(v: &FalkorValue) -> serde_json::Value {
         _ => serde_json::Value::Null,
     }
 }
+
+/// Small raw-query helper for agent claims and writes; does not alter template envelopes.
+pub async fn query_rows(g: &mut AsyncGraph, cypher: &str, params: serde_json::Value) -> Result<Vec<BTreeMap<String, serde_json::Value>>> {
+    let pairs: Vec<(String, String)> = params.as_object().map(|m| m.iter()
+        .map(|(k,v)| (k.clone(), v.as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
+    let mut res = g.query(cypher).with_params(pairs).execute().await?;
+    let header: Vec<String> = res.header.iter().cloned().collect();
+    let mut rows = Vec::new();
+    while let Some(row) = res.data.next().await {
+        let values = row?.into_values();
+        rows.push(header.iter().zip(values.iter()).map(|(k,v)| (k.clone(), falkor_to_json(v))).collect());
+    }
+    Ok(rows)
+}
+
+pub async fn write_query(g: &mut AsyncGraph, cypher: &str, params: serde_json::Value) -> Result<()> {
+    let pairs: Vec<(String, String)> = params.as_object().map(|m| m.iter()
+        .map(|(k,v)| (k.clone(), v.as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
+    g.query(cypher).with_params(pairs).execute().await?;
+    Ok(())
+}
