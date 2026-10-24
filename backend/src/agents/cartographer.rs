@@ -69,16 +69,25 @@ async fn process_sync(c:&Config,gh:&GithubClient)->Result<bool>{
     let Some(row)=rows.first() else{return Ok(false)}; let uid=row["uid"].as_str().unwrap_or_default().to_string(); let handle=row["handle"].as_str().unwrap_or_default().to_string();
     write_event(&mut g,"cartographer","CLAIMED",&uid,"SYNC_REQUESTED → SYNCING").await?;
     let demo=if c.demo_repo.is_empty(){None}else{Some(c.demo_repo.as_str())};
-    let repos=gh.list_top_repos(&handle,demo).await?;
+    let repos=match gh.list_top_repos(&handle,demo).await{Ok(r)=>r,Err(e)=>{fail_sync(&mut g,&uid,&e.to_string()).await?;return Ok(true)}};
     for repo in repos {
         write_query(&mut g,"MATCH (p:Person {uid:$person}) MERGE (r:Repo {uid:$repo_uid}) SET r.full_name=$full_name,r.url=$url,r.description=$description,r.stars=$stars MERGE (p)-[:MAINTAINS]->(r)",json!({"person":uid,"repo_uid":format!("repo:{}",repo.full_name),"full_name":repo.full_name,"url":repo.html_url,"description":repo.description.unwrap_or_default(),"stars":repo.stargazers_count.to_string()})).await?;
-        for issue in gh.open_issues(&repo.full_name).await? {
+        let issues=match gh.open_issues(&repo.full_name).await{Ok(i)=>i,Err(e)=>{fail_sync(&mut g,&uid,&e.to_string()).await?;return Ok(true)}};
+        for issue in issues {
             write_query(&mut g,"MATCH (r:Repo {uid:$repo_uid}) MERGE (i:Issue {uid:$issue_uid}) ON CREATE SET i.number=$number,i.title=$title,i.body=$body,i.url=$url,i.gh_state='open',i.created_at=$created,i.state='NEW' MERGE (r)-[:HAS_ISSUE]->(i)",json!({"repo_uid":format!("repo:{}",repo.full_name),"issue_uid":format!("issue:{}#{}",repo.full_name,issue.number),"number":issue.number.to_string(),"title":issue.title,"body":issue.body.unwrap_or_default().chars().take(2000).collect::<String>(),"url":issue.html_url,"created":issue.created_at})).await?;
         }
     }
     for repo in &c.tracked_repos { write_query(&mut g,"MATCH (p:Person {uid:$person}) MERGE (r:Repo {uid:$repo_uid}) SET r.full_name=$full_name MERGE (p)-[:TRACKS]->(r)",json!({"person":uid,"repo_uid":format!("repo:{repo}"),"full_name":repo})).await?; }
     write_query(&mut g,"MATCH (p:Person {uid:$uid}) SET p.state='SYNCED',p.claimed_by='',p.claimed_at=''",json!({"uid":uid})).await?;
     write_event(&mut g,"cartographer","SYNCED",&uid,"SYNCING → SYNCED").await?; Ok(true)
+}
+
+// GitHub/API failures (bad handle, 404 loop, rate limit) are terminal, not
+// transient: park the node as SYNC_FAILED instead of wedging it in SYNCING
+// until a restart. Graph errors inside still propagate as retryable Err.
+async fn fail_sync(g:&mut falkordb::AsyncGraph,uid:&str,error:&str)->Result<()>{
+    write_query(g,"MATCH (p:Person {uid:$uid}) SET p.state='SYNC_FAILED',p.sync_error=$error,p.claimed_by='',p.claimed_at=''",json!({"uid":uid,"error":error.chars().take(200).collect::<String>()})).await?;
+    write_event(g,"cartographer","SYNC_FAILED",uid,"SYNCING → SYNC_FAILED").await
 }
 
 async fn watch(c:&Config,gh:Option<&GithubClient>)->Result<bool>{

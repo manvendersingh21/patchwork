@@ -25,11 +25,15 @@ async fn health(State(s):State<Arc<AppState>>)->Json<Value>{
 }
 
 #[derive(Deserialize)]struct SyncBody{handle:String,kind:String}
+// GitHub usernames: 1-39 chars of [A-Za-z0-9-], no leading/trailing hyphen.
+fn valid_handle(h:&str)->bool{(1..=39).contains(&h.len())&&h.bytes().next().is_some_and(|c|c.is_ascii_alphanumeric())&&h.bytes().next_back().is_some_and(|c|c.is_ascii_alphanumeric())&&h.bytes().all(|c|c.is_ascii_alphanumeric()||c==b'-')}
 async fn sync(State(s):State<Arc<AppState>>,Json(b):Json<SyncBody>)->impl IntoResponse{
-    let uid=format!("person:gh:{}",b.handle.trim_start_matches('@'));
+    let handle=b.handle.trim_start_matches('@').to_string();
+    if !valid_handle(&handle)||(b.kind!="self"&&b.kind!="contact"){return (StatusCode::BAD_REQUEST,Json(json!({"error":"invalid GitHub handle"})))}
+    let uid=format!("person:gh:{handle}");
     match connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await{
         Ok(mut g)=>{let q="MERGE (p:Person {uid:$uid}) SET p.handle=$handle,p.kind=$kind,p.state='SYNC_REQUESTED'";
-            match write_query(&mut g,q,json!({"uid":uid,"handle":b.handle.trim_start_matches('@'),"kind":b.kind})).await{Ok(())=>(StatusCode::OK,Json(json!({"person_uid":uid}))),Err(e)=>err(e)}},Err(e)=>err(e)}
+            match write_query(&mut g,q,json!({"uid":uid,"handle":handle,"kind":b.kind})).await{Ok(())=>(StatusCode::OK,Json(json!({"person_uid":uid}))),Err(e)=>err(e)}},Err(e)=>err(e)}
 }
 
 #[derive(Deserialize)]struct EncounterBody{note:String,place:String}
@@ -107,3 +111,22 @@ async fn topics()->Json<Value>{let v:Value=serde_json::from_str(include_str!("..
 async fn inject_issue(State(s):State<Arc<AppState>>,Json(b):Json<InjectBody>)->impl IntoResponse{let uid=format!("issue:{}#demo-{}",s.config.demo_repo,Uuid::new_v4());let repo=format!("repo:{}",s.config.demo_repo);match connect(&s.config.falkordb_host,s.config.falkordb_port,&s.config.graph_name).await{Ok(mut g)=>match write_query(&mut g,"MERGE (r:Repo {uid:$repo}) MERGE (i:Issue {uid:$uid}) SET i.title=$title,i.body=$body,i.gh_state='open',i.state='NEW',i.created_at=$created MERGE (r)-[:HAS_ISSUE]->(i)",json!({"repo":repo,"uid":uid,"title":b.title,"body":b.body,"created":Utc::now().to_rfc3339()})).await{Ok(())=>(StatusCode::OK,Json(json!({"issue_uid":uid}))),Err(e)=>err(e)},Err(e)=>err(e)}}
 
 fn err(e:anyhow::Error)->(StatusCode,Json<Value>){(StatusCode::INTERNAL_SERVER_ERROR,Json(json!({"error":e.to_string()})))}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn handle_rules() {
+        assert!(valid_handle("a"));
+        assert!(valid_handle("Ada-Lovelace-99"));
+        assert!(valid_handle(&"a".repeat(39)));
+        assert!(!valid_handle(""));
+        assert!(!valid_handle(&"a".repeat(40)));
+        assert!(!valid_handle("-ada"));
+        assert!(!valid_handle("ada-"));
+        assert!(!valid_handle("not_a_handle"));
+        assert!(!valid_handle("uniçode"));
+        assert!(!valid_handle("x}) DETACH DELETE n//repos"));
+    }
+}
