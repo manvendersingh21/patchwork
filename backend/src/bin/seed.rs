@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     let repo_name = env_value("DEMO_REPO").context("DEMO_REPO missing in .env")?;
     let repo = format!("repo:{repo_name}");
     let url = format!("https://github.com/{repo_name}");
-    write(&mut g, "MERGE (r:Repo {uid: $uid}) SET r.full_name = $name, r.url = $url, r.demo = true",
+    write(&mut g, "MERGE (r:Repo {uid: $uid}) SET r.full_name = $name, r.url = $url, r.demo = false",
         &[("uid", repo.as_str()), ("name", repo_name.as_str()), ("url", url.as_str())]).await?;
     write(&mut g, "MATCH (p:Person {uid: $p}), (r:Repo {uid: $r}) MERGE (p)-[:MAINTAINS]->(r)",
         &[("p", me.as_str()), ("r", repo.as_str())]).await?;
@@ -81,8 +81,9 @@ async fn main() -> Result<()> {
     for iss in demo["issues"].as_array().context("issues")? {
         let number = iss["number"].as_i64().unwrap_or(0).to_string();
         let uid = format!("issue:{repo_name}#{number}");
-        write(&mut g, "MERGE (i:Issue {uid: $uid}) SET i.number = $n, i.title = $title, i.gh_state = 'open', i.state = 'LINKED', i.demo = true",
-            &[("uid", uid.as_str()), ("n", number.as_str()), ("title", s(iss, "title"))]).await?;
+        let issue_url = format!("https://github.com/{repo_name}/issues/{number}");
+        write(&mut g, "MERGE (i:Issue {uid: $uid}) SET i.number = $n, i.title = $title, i.gh_state = 'open', i.state = 'LINKED', i.demo = false, i.url = $url",
+            &[("uid", uid.as_str()), ("n", number.as_str()), ("title", s(iss, "title")), ("url", issue_url.as_str())]).await?;
         write(&mut g, "MATCH (r:Repo {uid: $r}), (i:Issue {uid: $i}) MERGE (r)-[:HAS_ISSUE]->(i)",
             &[("r", repo.as_str()), ("i", uid.as_str())]).await?;
         for topic in iss["topics"].as_array().into_iter().flatten() {
