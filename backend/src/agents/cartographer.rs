@@ -8,11 +8,19 @@ use tokio::time::{sleep, Duration};
 pub async fn run(config: Config) {
     let _ = recover(&config).await;
     let github = GithubClient::from_env().ok();
+    // The graph work lanes poll only the database, but the watcher hits the
+    // GitHub REST API, so it alone is gated on WATCH_INTERVAL_SEC (default 5s)
+    // to stay inside the rate budget. Its first run arms the watch cursor.
+    let watch_every = Duration::from_secs(config.watch_interval_sec.max(1));
+    let mut next_watch = tokio::time::Instant::now();
     loop {
-        let worked = if let Some(client) = github.as_ref() { match process_sync(&config, client).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer sync failed");false} } } else { false }
-            || match process_encounter(&config).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer encounter failed");false} }
-            || match process_issue(&config).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer issue failed");false} }
-            || match watch(&config, github.as_ref()).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer watcher failed");false} };
+        let mut worked = if let Some(client) = github.as_ref() { match process_sync(&config, client).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer sync failed");false} } } else { false };
+        if !worked { worked = match process_encounter(&config).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer encounter failed");false} } }
+        if !worked { worked = match process_issue(&config).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer issue failed");false} } }
+        if !worked && tokio::time::Instant::now() >= next_watch {
+            next_watch = tokio::time::Instant::now() + watch_every;
+            worked = match watch(&config, github.as_ref()).await { Ok(v)=>v,Err(e)=>{tracing::warn!(error=%e,"Cartographer watcher failed");false} };
+        }
         if !worked { sleep(Duration::from_millis(500)).await; }
     }
 }
@@ -77,11 +85,19 @@ async fn watch(c:&Config,gh:Option<&GithubClient>)->Result<bool>{
     let Some(gh)=gh else{return Ok(false)};
     let mut g=graph(c).await?; let repo_uid=format!("repo:{}",c.demo_repo);
     let rows=query_rows(&mut g,"MATCH (r:Repo {uid:$uid}) RETURN r.watch_since AS cursor",json!({"uid":repo_uid})).await?;
-    let Some(v)=rows.first().and_then(|r|r.get("cursor")).and_then(Value::as_str) else{return Ok(false)};
+    let Some(v)=rows.first().and_then(|r|r.get("cursor")).and_then(Value::as_str) else{
+        // Nothing else arms the cursor (seed and snapshots never set it), so the
+        // first watcher run does: from now on, ingest only issues filed later.
+        // The cursor lags 60s so an issue filed in the same second as a poll
+        // (created_at truncates to seconds, the clock does not) is re-seen.
+        write_query(&mut g,"MATCH (r:Repo {uid:$uid}) SET r.watch_since=$cursor",json!({"uid":repo_uid,"cursor":(Utc::now()-chrono::Duration::seconds(60)).to_rfc3339()})).await?;
+        return Ok(false);
+    };
     let cursor=DateTime::parse_from_rfc3339(v).map(|x|x.with_timezone(&Utc)).unwrap_or_else(|_|Utc::now());
     let issues=gh.issues_created_after(&c.demo_repo,cursor).await?;
+    tracing::info!(fetched=issues.len(),"watcher poll");
     let found = !issues.is_empty();
     for i in issues { write_query(&mut g,"MERGE (r:Repo {uid:$repo_uid}) MERGE (i:Issue {uid:$issue_uid}) ON CREATE SET i.number=$number,i.title=$title,i.body=$body,i.url=$url,i.gh_state=$gh_state,i.created_at=$created,i.state='NEW' MERGE (r)-[:HAS_ISSUE]->(i)",json!({"repo_uid":repo_uid,"issue_uid":format!("issue:{}#{}",c.demo_repo,i.number),"number":i.number.to_string(),"title":i.title,"body":i.body.unwrap_or_default().chars().take(2000).collect::<String>(),"url":i.html_url,"gh_state":i.state,"created":i.created_at})).await?; }
-    write_query(&mut g,"MATCH (r:Repo {uid:$uid}) SET r.watch_since=$cursor",json!({"uid":repo_uid,"cursor":Utc::now().to_rfc3339()})).await?;
+    write_query(&mut g,"MATCH (r:Repo {uid:$uid}) SET r.watch_since=$cursor",json!({"uid":repo_uid,"cursor":(Utc::now()-chrono::Duration::seconds(60)).to_rfc3339()})).await?;
     Ok(found)
 }

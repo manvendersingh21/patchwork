@@ -36,7 +36,7 @@ impl GithubClient {
                 .filter(|o| o.status.success()).and_then(|o| String::from_utf8(o.stdout).ok())
                 .map(|s| s.trim().to_string()).filter(|s| !s.is_empty())
         });
-        Ok(Self { http: reqwest::Client::builder().user_agent("PatchWork/0.1").build()?, token })
+        Ok(Self { http: reqwest::Client::builder().user_agent("PatchWork/0.1").timeout(std::time::Duration::from_secs(15)).connect_timeout(std::time::Duration::from_secs(5)).build()?, token })
     }
 
     pub fn authenticated(&self) -> bool { self.token.is_some() }
@@ -71,7 +71,10 @@ impl GithubClient {
 
     /// Watcher query: GitHub's `since` filters updated time, then created_at enforces cursor semantics.
     pub async fn issues_created_after(&self, repo: &str, cursor: DateTime<Utc>) -> Result<Vec<Issue>> {
-        let since = cursor.to_rfc3339();
+        // GitHub's `since` filter silently returns nothing when the timestamp
+        // carries a "+00:00" offset (the + decodes as a space in query
+        // strings) — always emit the RFC3339 "Z" form instead.
+        let since = cursor.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
         let url = format!("https://api.github.com/repos/{repo}/issues?state=all&since={since}&per_page=100");
         let items: Vec<Issue> = self.request(&url).send().await?.error_for_status()?.json().await?;
         Ok(items.into_iter().filter(|i| i.pull_request.is_none() && DateTime::parse_from_rfc3339(&i.created_at).map(|t| t.with_timezone(&Utc) > cursor).unwrap_or(false)).collect())
