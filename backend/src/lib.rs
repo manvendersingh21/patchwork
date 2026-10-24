@@ -7,3 +7,4 @@ pub mod config;
 pub mod events;
 pub mod agents;
 pub mod api;
+pub mod mcp;
