@@ -115,14 +115,41 @@ pub struct NoArgs {}
 #[derive(Clone)]
 pub struct PatchworkMcp {
     graph: Arc<Mutex<AsyncGraph>>,
+    /// Set when this connection came in on a /share/<token>/mcp URL; None for the owner.
+    policy: Option<crate::share::SharePolicy>,
     #[allow(dead_code)]
     tool_router: ToolRouter<PatchworkMcp>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct CreateShareArgs {
+    /// Short name for the teammate or group, e.g. "team-berlin".
+    pub label: String,
+    /// Tools the share may call, from: talks_for_my_issues, talks_for_issue, people_to_meet, memory_recall, talks_by_topic, list_topics.
+    pub tools: Vec<String>,
+    /// Fields to hide from results, from: note, met_linkedin, source_url, handle, place.
+    #[serde(default)]
+    pub redact: Vec<String>,
 }
 
 impl PatchworkMcp {
     pub async fn new(host: &str, port: u16, graph_name: &str) -> anyhow::Result<Self> {
         let g = connect(host, port, graph_name).await?;
-        Ok(Self { graph: Arc::new(Mutex::new(g)), tool_router: Self::tool_router() })
+        Ok(Self { graph: Arc::new(Mutex::new(g)), policy: None, tool_router: Self::tool_router() })
+    }
+
+    /// Same graph, restricted to one share's policy.
+    pub fn scoped(&self, policy: crate::share::SharePolicy) -> Self {
+        Self { policy: Some(policy), ..self.clone() }
+    }
+
+    /// Look up a share token. Used by the HTTP gate before any tool runs.
+    pub fn share_policy(&self, token: String) -> futures_util::future::BoxFuture<'static, anyhow::Result<Option<crate::share::SharePolicy>>> {
+        let graph = self.graph.clone();
+        Box::pin(async move {
+            let mut g = graph.lock().await;
+            crate::share::load(&mut g, &token).await
+        })
     }
 
     async fn run(&self, name: &str, cypher: &str, params: serde_json::Value) -> Result<CallToolResult, McpError> {
@@ -130,7 +157,12 @@ impl PatchworkMcp {
         let env = run_template(&mut g, name, cypher, params)
             .await
             .map_err(|e| McpError::internal_error(e.to_string(), None))?;
-        let text = serde_json::to_string_pretty(&env).map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        drop(g);
+        let mut value = serde_json::to_value(&env).map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        if let Some(p) = &self.policy {
+            p.redact_value(&mut value);
+        }
+        let text = serde_json::to_string_pretty(&value).map_err(|e| McpError::internal_error(e.to_string(), None))?;
         Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
     }
 }
@@ -259,6 +291,11 @@ impl PatchworkMcp {
         let rows = query_rows(&mut g, "MATCH (t:Topic) RETURN t.slug AS slug, t.name AS name ORDER BY slug", serde_json::json!({}))
             .await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
         text_result(&rows)
+    }
+
+    #[tool(description = "Create a scoped share link for a teammate. Choose the tools they may call and the fields to hide (note, met_linkedin, source_url, handle, place). Returns mcp_path; prefix the server's public host to get the URL to send them. The link cannot call write tools or see hidden fields.")]
+    async fn create_share(&self, Parameters(a): Parameters<CreateShareArgs>) -> Result<CallToolResult, McpError> {
+        self.create_share_impl(a).await
     }
 
     #[tool(description = "Record a conversation: a hallway chat, or a LinkedIn DM thread read with the LinkedIn MCP's get_conversation (then set place='LinkedIn DM', source_url and met_linkedin). Your own model extracts who was met and which topics (slugs from list_topics) were discussed, and writes a one- or two-sentence summary into `note`; never paste the raw transcript. The server stores it and PatchWork's graph agents link it to open issues. No LLM runs on the server.")]
@@ -407,7 +444,52 @@ impl PatchworkMcp {
 }
 
 #[tool_handler]
+impl PatchworkMcp {
+    /// Create a share token and return its MCP path. Owner only.
+    async fn create_share_impl(&self, a: CreateShareArgs) -> Result<CallToolResult, McpError> {
+        if self.policy.is_some() {
+            return Err(McpError::invalid_request("shares cannot create shares", None));
+        }
+        let policy = crate::share::SharePolicy::new(&a.label, &a.tools, &a.redact).map_err(|e| McpError::invalid_params(e, None))?;
+        let mut g = self.graph.lock().await;
+        let token = crate::share::create(&mut g, &policy).await.map_err(|e| McpError::internal_error(e.to_string(), None))?;
+        text_result(&serde_json::json!({"label": policy.label, "token": token, "mcp_path": format!("/share/{token}/mcp"), "tools": policy.tools, "redact": policy.redact}))
+    }
+}
+
 impl ServerHandler for PatchworkMcp {
+    async fn call_tool(
+        &self,
+        request: rmcp::model::CallToolRequestParams,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::CallToolResponse, McpError> {
+        // The HTTP gate stores the share policy in the request extensions; the owner's /mcp has none.
+        let policy = context.extensions.get::<axum::http::request::Parts>().and_then(|p| p.extensions.get::<crate::share::SharePolicy>()).cloned();
+        let scoped = match policy {
+            Some(p) => {
+                if !p.allows(&request.name) {
+                    return Err(McpError::invalid_request(format!("tool '{}' is not shared with this link", request.name), None));
+                }
+                self.scoped(p)
+            }
+            None => self.clone(),
+        };
+        let tcc = rmcp::handler::server::tool::ToolCallContext::new(&scoped, request, context);
+        scoped.tool_router.call(tcc).await
+    }
+
+    async fn list_tools(
+        &self,
+        request: Option<rmcp::model::PaginatedRequestParams>,
+        context: rmcp::service::RequestContext<rmcp::RoleServer>,
+    ) -> Result<rmcp::model::ListToolsResult, McpError> {
+        let policy = context.extensions.get::<axum::http::request::Parts>().and_then(|p| p.extensions.get::<crate::share::SharePolicy>()).cloned();
+        let mut result = rmcp::model::ListToolsResult::default();
+        result.tools = self.tool_router.list_all().into_iter().filter(|t| policy.as_ref().map_or(true, |p| p.allows(&t.name))).collect();
+        let _ = request;
+        Ok(result)
+    }
+
     fn get_info(&self) -> ServerConfig {
         ServerConfig::new(ServerCapabilities::builder().enable_tools().build())
             .with_server_info(Implementation::new("patchwork", env!("CARGO_PKG_VERSION")))

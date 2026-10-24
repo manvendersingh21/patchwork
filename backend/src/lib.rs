@@ -8,3 +8,4 @@ pub mod events;
 pub mod agents;
 pub mod api;
 pub mod mcp;
+pub mod share;
