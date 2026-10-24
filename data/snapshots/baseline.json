@@ -1,21 +1,6 @@
 {
   "nodes": [
     {
-      "uid": "enc:12284f90-df59-444d-986f-3855dd00d107",
-      "labels": [
-        "Encounter"
-      ],
-      "properties": {
-        "claimed_at": "",
-        "claimed_by": "",
-        "met_at": "2026-10-24T19:47:28.437145+00:00",
-        "note": "Met Vasisht at the snack table. They scope agent tokens so agents can open PRs but never merge them.",
-        "place": "snack table",
-        "state": "LINKED",
-        "uid": "enc:12284f90-df59-444d-986f-3855dd00d107"
-      }
-    },
-    {
       "uid": "issue:manvendersingh21/deepcore-n1#1",
       "labels": [
         "Issue"
@@ -269,19 +254,6 @@
         "kind": "speaker",
         "name": "Steve Glass",
         "uid": "person:name:steve-glass"
-      }
-    },
-    {
-      "uid": "person:name:vasisht",
-      "labels": [
-        "Person"
-      ],
-      "properties": {
-        "demo": false,
-        "handle": "",
-        "kind": "contact",
-        "name": "Vasisht",
-        "uid": "person:name:vasisht"
       }
     },
     {
@@ -714,30 +686,6 @@
   ],
   "edges": [
     {
-      "type": "DISCUSSED",
-      "src_uid": "enc:12284f90-df59-444d-986f-3855dd00d107",
-      "dst_uid": "topic:agentic-security",
-      "properties": {
-        "confidence": "1.0",
-        "evidence": "set by client"
-      }
-    },
-    {
-      "type": "DISCUSSED",
-      "src_uid": "enc:12284f90-df59-444d-986f-3855dd00d107",
-      "dst_uid": "topic:mcp-auth",
-      "properties": {
-        "confidence": "1.0",
-        "evidence": "set by client"
-      }
-    },
-    {
-      "type": "MET",
-      "src_uid": "enc:12284f90-df59-444d-986f-3855dd00d107",
-      "dst_uid": "person:name:vasisht",
-      "properties": {}
-    },
-    {
       "type": "ABOUT",
       "src_uid": "issue:manvendersingh21/deepcore-n1#1",
       "dst_uid": "topic:agentic-security",
@@ -754,48 +702,6 @@
       "src_uid": "issue:manvendersingh21/deepcore-n1#1",
       "dst_uid": "topic:oauth",
       "properties": {}
-    },
-    {
-      "type": "BRIDGE",
-      "src_uid": "issue:manvendersingh21/deepcore-n1#1",
-      "dst_uid": "person:name:vasisht",
-      "properties": {
-        "created_at": 1792871248507,
-        "draft": "Hi team, I wanted to follow up on the implementation of fine-grained per-identity OAuth scopes for our hosted MCP tool calls. Let's ensure that this is prioritized to prevent any auto-merging and maintain our security standards. Thank you for your attention to this matter!",
-        "hops": "4",
-        "issue_title": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
-        "kind": "contact",
-        "met_at": "",
-        "note": "",
-        "path_uids": "[\"enc:12284f90-df59-444d-986f-3855dd00d107\",\"topic:agentic-security\",\"issue:manvendersingh21/deepcore-n1#1\",\"repo:manvendersingh21/deepcore-n1\",\"person:gh:manvendersingh21\",\"topic:mcp-auth\"]",
-        "place": "",
-        "score": "0.8",
-        "seen": "false",
-        "state": "ACTION_READY",
-        "uid": "bridge:5c96bd3c-41f8-4c2a-b98c-95b0882338e1",
-        "via_topic": "Agentic Security"
-      }
-    },
-    {
-      "type": "BRIDGE",
-      "src_uid": "issue:manvendersingh21/deepcore-n1#1",
-      "dst_uid": "person:name:vasisht",
-      "properties": {
-        "created_at": 1792871248508,
-        "draft": "Hi team, I wanted to follow up on the implementation of fine-grained per-identity OAuth scopes for our hosted MCP tool calls. Let's ensure that this is prioritized to prevent any auto-merging and maintain our security standards. Thank you for your attention to this matter!",
-        "hops": "4",
-        "issue_title": "Enforce fine-grained per-identity OAuth scopes on hosted MCP tool calls (block auto-merge)",
-        "kind": "contact",
-        "met_at": "",
-        "note": "",
-        "path_uids": "[\"enc:12284f90-df59-444d-986f-3855dd00d107\",\"topic:agentic-security\",\"issue:manvendersingh21/deepcore-n1#1\",\"repo:manvendersingh21/deepcore-n1\",\"person:gh:manvendersingh21\",\"topic:mcp-auth\"]",
-        "place": "",
-        "score": "0.8",
-        "seen": "false",
-        "state": "ACTION_READY",
-        "uid": "bridge:19dcd758-a24d-493c-bb3a-32468265e081",
-        "via_topic": "MCP Auth"
-      }
     },
     {
       "type": "ABOUT",
@@ -843,12 +749,6 @@
       "type": "ABOUT",
       "src_uid": "issue:manvendersingh21/deepcore-n1#4",
       "dst_uid": "topic:platform-engineering",
-      "properties": {}
-    },
-    {
-      "type": "LOGGED",
-      "src_uid": "person:gh:manvendersingh21",
-      "dst_uid": "enc:12284f90-df59-444d-986f-3855dd00d107",
       "properties": {}
     },
     {
