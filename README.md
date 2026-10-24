@@ -75,6 +75,20 @@ command = "/Users/manubaba/patchwork/target/debug/mcp"
 
 This machine already has PatchWork registered in `~/.codex/config.toml` — nothing to do.
 
+### ChatGPT (anyone at the conference)
+
+The HTTP server makes PatchWork a connector anyone can add — no install, no token:
+
+1. Presenter: `make api-mcp` in one terminal, `make tunnel` in another — it prints a public URL like `https://…trycloudflare.com/mcp` (restart `api-mcp` with `MCP_ALLOWED_HOSTS=<that-hostname>`).
+2. Attendee, in ChatGPT: **Settings → Connectors → Add new connector**, name `PatchWork`, paste the URL, no authentication.
+3. Then just talk (or share photos):
+   - "I just learned that hosted MCP servers should scope OAuth per identity — log it" → `log_learning`, which also tells you which talks cover it
+   - Share a **photo of a slide or whiteboard** and say "remember what this teaches" → ChatGPT reads the photo and logs the lesson with topics (images never touch the server)
+   - "Our agent keeps hallucinating repo structure — that's an open problem for me" → `log_issue`, and PatchWork's agents bridge it to the talks that address it within seconds
+   - "What did I learn this week?" → `recall_learnings`
+
+Each person's memory is keyed by the handle they give; memories are not shared between users.
+
 ### Security
 
 - The HTTP server accepts an optional `MCP_BEARER_TOKEN` env var; when set, every request must carry `Authorization: Bearer <token>` or it gets a 401. Use it whenever the port is reachable beyond loopback.
@@ -95,6 +109,9 @@ All tools run fixed, pre-verified Cypher templates on FalkorDB — arguments are
 | `list_topics` | The closed topic list (slug + name). | none |
 | `log_encounter` | Records a hallway conversation: creates the `Encounter`, the met `Person`, and `DISCUSSED` links to topics; returns `encounter_uid` / `contact_uid` with state `PARSED`. PatchWork's graph agents then link it to open issues. No LLM runs on the server — the calling model extracts who was met and which topics. | `person`, `note`, `met_name`, `topics` (required; `topics` must be non-empty slugs from `list_topics`, unknown slugs are rejected); optional `place`, `met_handle` (leave empty if unknown — never guess) |
 | `check_alerts` | Bridges PatchWork found between your open issues and people you met (newest first, up to 10), with state and hop count. Draft follow-ups with your own model. | none |
+| `log_learning` | Logs something learned — from a sentence or a photo the calling model reads — as a `Learning` node linked to the person and topics, and returns the talks that cover those topics. | `person`, `learned`, `topics` (required); `source` (optional) |
+| `log_issue` | Logs an open problem the user describes as an issue on their personal notes repo, auto-classified under topics; the agents bridge it to talks and contacts within seconds. | `person`, `title`, `body`, `topics` (required) |
+| `recall_learnings` | Everything the person logged as learned, newest first, optionally filtered to one topic. | `person` (required); `topic` (optional) |
 | `talks_by_topic` | Talks about the given topics, with their path. Template T6. | `topics` (required, comma-separated slugs, e.g. `"mcp-auth,agentic-security"`); optional `day`, `after`, `before` (same format as above) |
 
 ## Repository

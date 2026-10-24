@@ -9,6 +9,15 @@ HANDLE ?= $(shell grep -E '^PRESENTER_HANDLE=' .env | cut -d= -f2 | tr -d '"')
 api:
 	cargo run --bin patchwork
 
+api-mcp: ## Run the MCP-over-HTTP server on 127.0.0.1:8765 (set MCP_ALLOWED_HOSTS for a public tunnel)
+	cargo run --bin mcp_http
+
+tunnel: ## Expose the MCP server publicly; prints the URL to paste into ChatGPT as a connector
+	@echo 'starting cloudflared…'; (cloudflared tunnel --url http://127.0.0.1:8765 > /tmp/cloudflared.log 2>&1 &); \
+	sleep 6; url=$$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -1); \
+	echo 'public MCP URL: '$$url'/mcp'; \
+	echo 'then restart with: MCP_ALLOWED_HOSTS='$${url#https://}' cargo run --bin mcp_http'
+
 ui:
 	cd frontend && npm run dev
 
