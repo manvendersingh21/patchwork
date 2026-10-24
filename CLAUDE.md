@@ -7,6 +7,7 @@ Full build plan is in `PLAN.md`. These rules apply to every session.
 - Frontend stays Vite + React + TypeScript (react-force-graph-2d).
 - LLM is OpenAI (`OPENAI_API_KEY`, `OPENAI_MODEL`). No local model for now.
 - T1 and T3 match `-[:MAINTAINS|TRACKS]->`. `Person-[:TRACKS]->Repo` is for repos the presenter follows without maintaining. `TRACKED_REPOS` in `.env` lists them.
+- LinkedIn DM import is allowed, overriding PLAN.md's "no LinkedIn scraping". It is user-initiated and read-only, through the client-side `mcp-server-linkedin` MCP (stdio, pinned version), and stores summaries via `log_encounter`. Follow-ups are drafts only, never auto-sent.
 
 ## Rules
 1. Use the stack in this file. Ask before adding a dependency or changing a decision.

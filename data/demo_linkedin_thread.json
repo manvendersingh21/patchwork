@@ -1,0 +1,12 @@
+{
+  "demo_persona": true,
+  "label": "Demo persona - not a real LinkedIn thread",
+  "source_url": "https://www.linkedin.com/messaging/thread/demo/",
+  "met_name": "Priya Demo",
+  "met_linkedin": "priya-demo",
+  "summary": "The thread is a chat about MCP OAuth scoping per identity and agent security: how hosted MCP tool calls should carry per-identity OAuth scopes so an agent can open issues but never send messages on its own. Both sides agree the same fine-grained scope model applies to the LinkedIn DM boundary before any tool call goes through.",
+  "topics": [
+    "mcp-auth",
+    "agentic-security"
+  ]
+}

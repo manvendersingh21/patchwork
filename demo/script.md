@@ -108,3 +108,14 @@ brief, so none of them were changed:
   keeps it out of T1, T3 and T6, since all three traverse SPEAKS_AT.
 
 No session is missing `sid`, `title`, `day`, `start_time`, `end_time`, `room`, `speakers` or `topics`.
+
+## Act 2b: LinkedIn thread to graph
+
+**Live.** Ask the client: "Read my LinkedIn thread \<id\> with get_conversation, summarize it, and log_encounter it with source_url, met_linkedin, place LinkedIn DM".
+
+The `log_encounter` surfaces the person (uid becomes `person:li:<slug>` when no GitHub handle is given); the agents
+then bridge that person to the open issue via memory_recall/check_alerts, and Concierge drafts the follow-up — Copy,
+never send (the LinkedIn MCP stays stdio/local, so its `send_message` is never in play).
+
+**Fallback.** If LinkedIn login/captcha fails, have the client `log_encounter` from `data/demo_linkedin_thread.json`
+(the demo persona thread) instead of reading a live thread.

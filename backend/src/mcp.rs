@@ -67,6 +67,12 @@ pub struct LogEncounterArgs {
     pub met_handle: String,
     /// Topic slugs discussed, chosen from list_topics. Unknown slugs are rejected.
     pub topics: Vec<String>,
+    /// Where the conversation lives, e.g. a LinkedIn messaging thread URL. Empty for in-person chats.
+    #[serde(default)]
+    pub source_url: String,
+    /// Their LinkedIn profile slug (linkedin.com/in/<slug>), if known from the thread. Leave empty otherwise; never guess.
+    #[serde(default)]
+    pub met_linkedin: String,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -188,6 +194,22 @@ fn strict_time(raw: &str) -> Result<String, String> {
 }
 
 /// The strict_* helpers speak String errors; tools turn them into invalid_params.
+fn linkedin_slug(raw: &str) -> String {
+    let r = raw.trim().split(['?', '#']).next().unwrap_or("").trim_end_matches('/');
+    r.rsplit("/in/").next().unwrap_or(r).trim_end_matches('/').to_lowercase()
+}
+
+/// Contact uid precedence: GitHub handle, then LinkedIn slug, then plain name.
+fn contact_uid(handle: &str, linkedin: &str, name: &str) -> String {
+    if !handle.trim().is_empty() {
+        format!("person:gh:{}", handle.trim().trim_start_matches('@'))
+    } else if !linkedin_slug(linkedin).is_empty() {
+        format!("person:li:{}", linkedin_slug(linkedin))
+    } else {
+        format!("person:name:{}", name.trim().to_lowercase().split_whitespace().collect::<Vec<_>>().join("-"))
+    }
+}
+
 fn bad_param(e: String) -> McpError {
     McpError::invalid_params(e, None)
 }
@@ -239,7 +261,7 @@ impl PatchworkMcp {
         text_result(&rows)
     }
 
-    #[tool(description = "Record a hallway conversation. Your own model extracts who was met and which topics (slugs from list_topics) were discussed; the server stores it and PatchWork's graph agents link it to open issues. No LLM runs on the server.")]
+    #[tool(description = "Record a conversation: a hallway chat, or a LinkedIn DM thread read with the LinkedIn MCP's get_conversation (then set place='LinkedIn DM', source_url and met_linkedin). Your own model extracts who was met and which topics (slugs from list_topics) were discussed, and writes a one- or two-sentence summary into `note`; never paste the raw transcript. The server stores it and PatchWork's graph agents link it to open issues. No LLM runs on the server.")]
     async fn log_encounter(&self, Parameters(a): Parameters<LogEncounterArgs>) -> Result<CallToolResult, McpError> {
         if a.note.trim().is_empty() || a.met_name.trim().is_empty() {
             return Err(McpError::invalid_params("note and met_name are required", None));
@@ -247,16 +269,12 @@ impl PatchworkMcp {
         let mut g = self.graph.lock().await;
         require_topics(&mut g, &a.topics).await?;
         let uid = format!("enc:{}", uuid::Uuid::new_v4());
-        let contact = if a.met_handle.trim().is_empty() {
-            format!("person:name:{}", a.met_name.trim().to_lowercase().split_whitespace().collect::<Vec<_>>().join("-"))
-        } else {
-            format!("person:gh:{}", a.met_handle.trim().trim_start_matches('@'))
-        };
+        let contact = contact_uid(&a.met_handle, &a.met_linkedin, &a.met_name);
         let err = |e: anyhow::Error| McpError::internal_error(e.to_string(), None);
-        write_query(&mut g, "MATCH (p:Person {uid: $person}) MERGE (e:Encounter {uid: $uid}) SET e.note = $note, e.place = $place, e.met_at = $met_at, e.state = 'NEW' MERGE (p)-[:LOGGED]->(e)",
-            serde_json::json!({"person": a.person, "uid": uid, "note": a.note, "place": a.place, "met_at": chrono::Utc::now().to_rfc3339()})).await.map_err(err)?;
-        write_query(&mut g, "MATCH (e:Encounter {uid: $uid}) MERGE (c:Person {uid: $contact}) ON CREATE SET c.name = $name, c.handle = $handle, c.kind = 'contact', c.demo = false MERGE (e)-[:MET]->(c)",
-            serde_json::json!({"uid": uid, "contact": contact, "name": a.met_name.trim(), "handle": a.met_handle.trim()})).await.map_err(err)?;
+        write_query(&mut g, "MATCH (p:Person {uid: $person}) MERGE (e:Encounter {uid: $uid}) SET e.note = $note, e.place = $place, e.source_url = $source_url, e.met_at = $met_at, e.state = 'NEW' MERGE (p)-[:LOGGED]->(e)",
+            serde_json::json!({"person": a.person, "uid": uid, "note": a.note, "place": a.place, "source_url": a.source_url.trim(), "met_at": chrono::Utc::now().to_rfc3339()})).await.map_err(err)?;
+        write_query(&mut g, "MATCH (e:Encounter {uid: $uid}) MERGE (c:Person {uid: $contact}) ON CREATE SET c.name = $name, c.handle = $handle, c.kind = 'contact', c.demo = false SET c.linkedin = CASE WHEN $linkedin = '' THEN c.linkedin ELSE $linkedin END MERGE (e)-[:MET]->(c)",
+            serde_json::json!({"uid": uid, "contact": contact, "name": a.met_name.trim(), "handle": a.met_handle.trim(), "linkedin": linkedin_slug(&a.met_linkedin)})).await.map_err(err)?;
         for t in &a.topics {
             write_query(&mut g, "MATCH (e:Encounter {uid: $uid}), (t:Topic {slug: $slug}) MERGE (e)-[r:DISCUSSED]->(t) SET r.confidence = '1.0', r.evidence = 'set by client'",
                 serde_json::json!({"uid": uid, "slug": t})).await.map_err(err)?;
@@ -400,6 +418,14 @@ impl ServerHandler for PatchworkMcp {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn contact_uid_precedence() {
+        assert_eq!(contact_uid("@octo", "ada", "Ada L"), "person:gh:octo");
+        assert_eq!(contact_uid("", "https://www.linkedin.com/in/Ada-L/", "Ada L"), "person:li:ada-l");
+        assert_eq!(contact_uid("", "linkedin.com/in/ada-l?miniProfileUrn=x#y", "Ada L"), "person:li:ada-l");
+        assert_eq!(contact_uid("", "", "Ada  L"), "person:name:ada-l");
+    }
 
     #[test]
     fn strict_day_forms() {

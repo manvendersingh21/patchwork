@@ -96,6 +96,17 @@ Each person's memory is keyed by the handle they give; memories are not shared b
 - The stdio server inherits the caller's permissions — register it only for users you trust with the graph.
 - Both servers read the repo `.env` for the FalkorDB connection. Keep `.env` out of configs, screenshots, and chat.
 
+## LinkedIn follow-ups
+
+PatchWork can remember LinkedIn DM threads the same way it remembers hallway chats. Your MCP client runs two servers side by side: PatchWork, and the third-party [linkedin-mcp-server](https://github.com/stickerdaniel/linkedin-mcp-server), pinned in `.mcp.json` to `mcp-server-linkedin==4.28.0`. The two servers never call each other.
+
+1. Log in once (opens a browser window, and the session is saved to `~/.linkedin-mcp/profile/`): `uvx mcp-server-linkedin==4.28.0 --login`
+2. Ask your client: *"Read my LinkedIn thread `2-ZjFi…==` with get_conversation, summarize it, and log_encounter it with place 'LinkedIn DM', the thread URL as source_url, and their profile slug as met_linkedin."* Pass the thread ID, the part after `/messaging/thread/`, not the whole URL.
+3. The contact is stored as `person:li:<slug>`, so re-importing the same person adds a new encounter to the same node. PatchWork's agents bridge the thread's topics to your open issues.
+4. When a matching issue lands (`log_issue`, or a real GitHub issue), `memory_recall` and `check_alerts` surface that person with place `LinkedIn DM`. Your client drafts the follow-up for you to copy.
+
+Rules: import only threads you chose. Store a summary in `note`, never the raw transcript. **Never auto-send:** don't call the LinkedIn server's `send_message` or `connect_with_person` without explicit approval. Keep the LinkedIn server on stdio and local. Its HTTP mode has no auth and acts as your account, so never put it behind `make tunnel`. LinkedIn's User Agreement prohibits automated access, so use it sparingly. Demo fallback: `data/demo_linkedin_thread.json` (labeled demo persona).
+
 ## MCP tools
 
 All tools run fixed, pre-verified Cypher templates on FalkorDB — arguments are typed values only, and no client-supplied Cypher is ever accepted. Template-backed tools return an envelope with `template`, `hops`, `run_time_ms` (FalkorDB's own internal execution time, not wall clock), `rows`, and the `path`.
@@ -107,7 +118,7 @@ All tools run fixed, pre-verified Cypher templates on FalkorDB — arguments are
 | `people_to_meet` | Speakers relevant to the person's open issues whom they haven't logged meeting yet (top 5). Template T3. | `person` (required) |
 | `memory_recall` | People the user met who discussed the topics of one issue, newest first. Template T4. | `issue` (required) |
 | `list_topics` | The closed topic list (slug + name). | none |
-| `log_encounter` | Records a hallway conversation: creates the `Encounter`, the met `Person`, and `DISCUSSED` links to topics; returns `encounter_uid` / `contact_uid` with state `PARSED`. PatchWork's graph agents then link it to open issues. No LLM runs on the server — the calling model extracts who was met and which topics. | `person`, `note`, `met_name`, `topics` (required; `topics` must be non-empty slugs from `list_topics`, unknown slugs are rejected); optional `place`, `met_handle` (leave empty if unknown — never guess) |
+| `log_encounter` | Records a hallway conversation: creates the `Encounter`, the met `Person`, and `DISCUSSED` links to topics; returns `encounter_uid` / `contact_uid` with state `PARSED`. PatchWork's graph agents then link it to open issues. No LLM runs on the server — the calling model extracts who was met and which topics. | `person`, `note`, `met_name`, `topics` (required; `topics` must be non-empty slugs from `list_topics`, unknown slugs are rejected); optional `place`, `met_handle` / `met_linkedin` (leave empty if unknown — never guess), `source_url` (e.g. LinkedIn thread URL) |
 | `check_alerts` | Bridges PatchWork found between your open issues and people you met (newest first, up to 10), with state and hop count. Draft follow-ups with your own model. | none |
 | `log_learning` | Logs something learned — from a sentence or a photo the calling model reads — as a `Learning` node linked to the person and topics, and returns the talks that cover those topics. | `person`, `learned`, `topics` (required); `source` (optional) |
 | `log_issue` | Logs an open problem the user describes as an issue on their personal notes repo, auto-classified under topics; the agents bridge it to talks and contacts within seconds. | `person`, `title`, `body`, `topics` (required) |
