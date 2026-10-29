@@ -9,3 +9,5 @@ target-graph/
 frontend/dist/
 frontend/node_modules/
 *.swp
+.DS_Store
+.hacp/
